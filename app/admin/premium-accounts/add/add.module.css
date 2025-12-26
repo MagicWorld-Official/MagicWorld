@@ -1,0 +1,138 @@
+/* PAGE HEADER */
+.dashboard {
+  padding: 20px 0;
+  margin: 0 auto;
+}
+
+.pageHeader {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+/* FORM */
+.form {
+  background: #fff;
+  padding: 28px;
+  border-radius: 16px;
+  border: 1px solid #eee;
+  max-width: 760px;
+  margin: auto;
+}
+
+/* FORM GROUP */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.formGroup label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+}
+
+.form input,
+.form textarea,
+.form select {
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form input:focus,
+.form textarea:focus,
+.form select:focus {
+  border-color: #0070f3;
+  box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.15);
+}
+
+/* TWO COLUMN ROW */
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+/* BADGES + GALLERY */
+.badgeInputRow {
+  display: flex;
+  gap: 10px;
+}
+
+.badgeInputRow input {
+  flex: 1;
+}
+
+.badgeInputRow button {
+  background: #0070f3;
+  color: #fff;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.badgeInputRow button:hover {
+  background: #005cc0;
+}
+
+.badgeList {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.badge {
+  background: #eef5ff;
+  color: #0057cc;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.galleryList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.galleryItem {
+  padding: 6px 10px;
+  background: #f7f7f7;
+  border-radius: 8px;
+  font-size: 13px;
+  border: 1px solid #ddd;
+}
+
+/* SUBMIT */
+.submitBtn {
+  margin-top: 10px;
+  background: #0070f3;
+  color: #fff;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.submitBtn:hover {
+  background: #005cc0;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+}

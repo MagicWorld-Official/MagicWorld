@@ -1,0 +1,287 @@
+.wrapper {
+  padding: 40px 0;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 25px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 25px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.thumb {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.info h3 {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.slug {
+  font-size: 13px;
+  color: #777;
+  margin-bottom: 6px;
+}
+
+.free {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.paid {
+  color: #111;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.editBtn {
+  background: #3f51b5;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.deleteBtn {
+  background: #e63946;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.deleteBtn:hover {
+  opacity: 0.9;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 20px;
+}
+
+/* MODAL OVERLAY */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+}
+
+/* MODAL BOX */
+.modal {
+  background: #fff;
+  padding: 25px;
+  width: 95%;
+  max-width: 650px;
+  border-radius: 12px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: fadeIn 0.2s ease;
+}
+
+/* TITLE */
+.modalTitle {
+  font-size: 26px;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+/* FORM FIELDS */
+.modalGroup {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.modalGroup label {
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.modalGroup input,
+.modalGroup textarea,
+.modalGroup select {
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+/* BUTTON AREA */
+.modalActions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.saveBtn {
+  background: #111;
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.closeBtn {
+  background: #aaa;
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.saveBtn:hover,
+.closeBtn:hover {
+  opacity: 0.85;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* FEATURE BUILDER INSIDE EDIT MODAL */
+.featureBox {
+  padding: 18px;
+  background: #f7f7f7;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.featureBox h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.addBtn,
+.smallBtn {
+  background: #111;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+.addBtn:hover,
+.smallBtn:hover {
+  opacity: 0.85;
+}
+
+.smallBtn {
+  background: #333;
+  margin-left: 10px;
+  padding: 6px 10px;
+}
+
+.categoryBlock {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  padding: 14px;
+}
+
+.categoryBlock h4 {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.sectionBlock {
+  margin-top: 12px;
+  background: #fafafa;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #eee;
+}
+
+.sectionBlock strong {
+  font-size: 15px;
+}
+
+.itemList {
+  margin-top: 10px;
+  padding-left: 18px;
+}
+
+.itemList li {
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.empty {
+  font-size: 14px;
+  color: #777;
+}
+
+.emptySmall {
+  font-size: 13px;
+  color: #aaa;
+}
+
+/* MOBILE FIXES */
+@media (max-width: 600px) {
+  .addBtn,
+  .smallBtn {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 10px;
+  }
+
+  .categoryBlock,
+  .sectionBlock {
+    padding: 12px;
+  }
+}

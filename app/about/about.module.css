@@ -1,0 +1,42 @@
+.about {
+  padding: 60px 0;
+  background: #ffffff;
+}
+
+.innerSingle {
+  max-width: 700px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.title {
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin-bottom: 22px;
+}
+
+.subtitle {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.text {
+  font-size: 1.1rem;
+  color: #555;
+  line-height: 1.75;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 500px) {
+  .title {
+    font-size: 2.1rem;
+  }
+
+  .subtitle {
+    font-size: 1.35rem;
+  }
+}

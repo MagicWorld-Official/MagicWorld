@@ -1,0 +1,171 @@
+.wrapper {
+  padding: 40px 0;
+}
+
+.title {
+  font-size: 34px;
+  font-weight: 800;
+  margin-bottom: 25px;
+}
+
+/* TOP BAR */
+.topBar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.search {
+  flex: 1;
+  min-width: 240px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 15px;
+}
+
+.select {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+  font-size: 15px;
+}
+
+/* TABLE */
+.tableWrap {
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1000px;
+}
+
+.table th {
+  background: #f8f8f8;
+  padding: 14px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 14px;
+  border-bottom: 1px solid #eee;
+}
+
+.table td {
+  padding: 14px;
+  border-bottom: 1px solid #f1f1f1;
+  font-size: 15px;
+}
+
+/* Screenshot Button */
+.ssBtn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #0066ff;
+  color: white;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+}
+
+/* STATUS BADGES */
+.badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.pending {
+  background: #fff3cd;
+  color: #8a6d3b;
+}
+
+.paid {
+  background: #cce5ff;
+  color: #004085;
+}
+
+.delivered {
+  background: #d4edda;
+  color: #2f6627;
+}
+
+.cancelled {
+  background: #f8d7da;
+  color: #842029;
+}
+
+.empty {
+  text-align: center;
+  padding: 30px;
+  font-size: 16px;
+  opacity: 0.6;
+}
+
+/* ACTION BUTTONS */
+.actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.actions button {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 600;
+  border: none;
+}
+
+.green { background: #28a745; color: white; }
+.blue { background: #007bff; color: white; }
+.yellow { background: #ffc107; color: #000; }
+.red { background: #dc3545; color: white; }
+.delete { background: #444; color: #fff; }
+
+/* Screenshot Overlay */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: zoom-out;
+  z-index: 9999;
+}
+
+.imagePreview {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 10px;
+}
+
+.paid {
+  background: #cce5ff;
+  color: #004085;
+}
+
+.pending {
+  background: #fff3cd;
+  color: #8a6d3b;
+}
+
+.delivered {
+  background: #d4edda;
+  color: #2f6627;
+}
+
+.cancelled {
+  background: #f8d7da;
+  color: #842029;
+}

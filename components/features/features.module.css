@@ -1,0 +1,162 @@
+.features {
+  padding: 80px 0;
+  background: #fafafa;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.heading {
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  font-weight: 800;
+  color: #111;
+}
+
+.subheading {
+  margin-top: 8px;
+  color: #666;
+  font-size: 1rem;
+}
+
+/* Tabs */
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  padding: 6px;
+  background: #fff;
+  border-radius: 999px;
+  margin: 0 auto 36px;
+  width: fit-content;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  overflow-x: auto;
+}
+
+.tab {
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: transparent;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  color: #444;
+  transition: all 0.2s ease;
+}
+
+.tab:hover {
+  background: #f1f1f1;
+}
+
+.activeTab {
+  background: #111;
+  color: #fff;
+}
+
+/* Accordions */
+
+.accordionWrap {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.accordion {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e6e6e6;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+}
+
+.accordionHeader {
+  padding: 18px 22px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  background: #fff;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+
+.openHeader {
+  background: #111;
+  color: #fff;
+}
+
+.chevron {
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.25s ease;
+}
+
+.openHeader .chevron {
+  transform: rotate(-135deg);
+}
+
+/* Accordion Body */
+
+.accordionBody {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.bodyOpen {
+  max-height: 600px;
+}
+
+.list {
+  padding: 16px 22px 20px;
+  margin: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.item {
+  font-size: 0.95rem;
+  color: #333;
+  padding-left: 18px;
+  position: relative;
+}
+
+.item::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #111;
+  font-weight: 700;
+}
+
+/* Empty */
+
+.empty {
+  text-align: center;
+  color: #888;
+  padding: 24px;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .features {
+    padding: 60px 0;
+  }
+
+  .accordionHeader {
+    padding: 16px 18px;
+    font-size: 1rem;
+  }
+}

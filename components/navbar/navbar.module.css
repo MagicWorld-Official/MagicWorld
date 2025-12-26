@@ -1,0 +1,149 @@
+/* NAVBAR WRAPPER */
+.navbar {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(230, 230, 230, 0.6);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.04);
+}
+
+/* INNER CONTAINER */
+.inner {
+  height: 74px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* BRAND */
+.brand {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #1e1e1e;
+  letter-spacing: -0.5px;
+  transition: color 0.25s ease;
+}
+
+.brand:hover {
+  color: #0070f3;
+}
+
+/* HAMBURGER ICON */
+.menuButton {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  width: 30px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.bar {
+  height: 3px;
+  width: 100%;
+  background: #333;
+  border-radius: 2px;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+
+/* X animation */
+.menuOpen .bar:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+
+.menuOpen .bar:nth-child(2) {
+  opacity: 0;
+}
+
+.menuOpen .bar:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
+/* DESKTOP MENU */
+.navlinks {
+  list-style: none;
+  display: flex;
+  gap: 34px;
+}
+
+.navlinks li a {
+  font-size: 1.07rem;
+  color: #444;
+  position: relative;
+  transition: color 0.25s ease;
+}
+
+/* Hover underline */
+.navlinks li a::after {
+  content: "";
+  width: 0%;
+  height: 2px;
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  background: #0070f3;
+  transition: width 0.28s ease;
+}
+
+.navlinks li a:hover::after {
+  width: 100%;
+}
+
+.menuButton:focus-visible,
+.navlinks li a:focus-visible {
+  outline: 2px solid #0070f3;
+  outline-offset: 3px;
+}
+
+/* Active Link */
+.activeLink {
+  color: #0070f3 !important;
+}
+
+.activeLink::after {
+  width: 100%;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .menuButton {
+    display: flex;
+  }
+
+  .navlinks {
+    display: none;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    padding: 24px 20px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(14px);
+    border-top: 1px solid #eee;
+    position: absolute;
+    left: 0;
+    top: 74px;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    border-radius: 0 0 14px 14px;
+  }
+
+  .showMenu {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .navlinks li {
+    text-align: left;
+  }
+
+  .navlinks li a {
+    padding: 5px 0;
+  }
+}

@@ -1,0 +1,77 @@
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* BASE HTML */
+html {
+  height: 100%;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* BODY */
+body {
+  min-height: 100%;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  background: #ffffff;
+  color: #111;
+  line-height: 1.55;
+  text-rendering: optimizeLegibility;
+}
+
+/* CONTAINER */
+.container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* LINKS */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* IMAGES – stops CLS (Content Layout Shift) */
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* BUTTONS – improve accessibility */
+button {
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  background: none;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #0070f3;
+  outline-offset: 2px;
+}
+
+/* FORM ELEMENTS */
+input, textarea, select {
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+/* SCROLLBAR (Optional aesthetic, lightweight) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}

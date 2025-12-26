@@ -1,0 +1,118 @@
+.footer {
+  background: #f8fafc;
+  padding: 70px 0 35px;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 80px;
+}
+
+/* MAIN GRID */
+.inner {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-items: center;
+  align-items: flex-start;
+  gap: 60px;
+  margin-bottom: 40px;
+}
+
+/******** BRAND ********/
+.brand {
+  max-width: 280px;
+  text-align: center;
+}
+
+.brand h3 {
+  font-size: 1.7rem;
+  font-weight: 800;
+  margin-bottom: 12px;
+  color: #1a1a1a;
+}
+
+.brand p {
+  color: #555;
+  line-height: 1.6;
+}
+
+/******** LINKS ********/
+.links h4,
+.contact h4 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #1a1a1a;
+}
+
+.links ul {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-left: 20px;
+}
+
+.links a {
+  text-decoration: none;
+  color: #444;
+  transition: 0.2s ease;
+}
+
+.links a:hover {
+  color: #0070f3;
+}
+
+.links a:focus-visible,
+.contact a:focus-visible {
+  outline: 2px solid #0070f3;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/******** CONTACT ********/
+.contact {
+  text-align: center;
+}
+
+.contact p {
+  color: #555;
+  line-height: 1.55;
+  margin: 4px 0;
+}
+
+/******** BOTTOM BAR ********/
+.bottom {
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 20px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bottom p {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/******** VERSION BADGE ********/
+.versionBadge {
+  display: inline-block;
+  margin: 0 auto;
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  background: #111;
+  border-radius: 6px;
+  letter-spacing: 0.4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+/******** RESPONSIVE ********/
+@media (max-width: 900px) {
+  .inner {
+    grid-template-columns: 1fr;
+    gap: 35px;
+    text-align: center;
+  }
+}

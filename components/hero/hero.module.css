@@ -1,0 +1,145 @@
+.hero {
+  width: 100%;
+  padding: 80px 0;
+  background: #ffffff;
+}
+
+/* Main grid */
+.inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 60px;
+}
+
+/* LEFT SIDE */
+.left {
+  max-width: 520px;
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 20px;
+  color: #1a1a1a;
+}
+
+.title span {
+  color: #0070f3;
+}
+
+.subtitle {
+  font-size: 1.15rem;
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 32px;
+  max-width: 480px;
+}
+
+/* BUTTONS */
+.buttons {
+  display: flex;
+  gap: 16px;
+}
+
+.primaryBtn {
+  background: #0070f3;
+  color: #fff;
+  padding: 12px 26px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: 0.25s ease;
+}
+
+.primaryBtn:hover {
+  background: #005cc0;
+}
+
+.secondaryBtn {
+  border: 1px solid #ccc;
+  padding: 12px 26px;
+  border-radius: 8px;
+  color: #333;
+  font-weight: 600;
+  transition: 0.25s ease;
+}
+
+.secondaryBtn:hover {
+  border-color: #999;
+}
+
+/* RIGHT SIDE */
+.right {
+  display: flex;
+  justify-content: center;
+}
+
+.imageWrapper {
+  display: inline-block;
+  animation: float 5s ease-in-out infinite;
+}
+
+.heroImage {
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  border-radius: 20px;
+  object-fit: contain;
+}
+
+/* Animation */
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+  100% { transform: translateY(0); }
+}
+
+/* TABLET + MOBILE */
+@media (max-width: 900px) {
+  .inner {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 40px;
+  }
+
+  .left {
+    order: 2;
+  }
+
+  .right {
+    order: 1;
+  }
+
+  .title {
+    font-size: 2.4rem;
+  }
+
+  .subtitle {
+    margin: 0 auto 28px;
+  }
+
+  .heroImage {
+    max-width: 280px;
+  }
+
+  .buttons {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 500px) {
+  .title {
+    font-size: 2rem;
+  }
+
+  .heroImage {
+    max-width: 220px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .imageWrapper {
+    animation: none;
+  }
+}
