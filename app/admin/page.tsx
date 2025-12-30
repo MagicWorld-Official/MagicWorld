@@ -11,8 +11,17 @@ export default function AdminDashboard() {
 
   // 🔐 Verify admin session on page load
   useEffect(() => {
+    const token = sessionStorage.getItem("adminToken");
+
+    if (!token) {
+      window.location.href = "/admin/login";
+      return;
+    }
+
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/me`, {
-      credentials: "include",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     })
       .then((res) => {
         if (!res.ok) throw new Error("Unauthorized");
@@ -22,18 +31,15 @@ export default function AdminDashboard() {
         setLoading(false);
       })
       .catch(() => {
+        sessionStorage.removeItem("adminToken");
         router.replace("/admin/login");
       });
-  }, [router]);
+  }, []);
 
   // 🚪 Proper logout (httpOnly cookie)
-  const logout = async () => {
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/logout`, {
-      method: "POST",
-      credentials: "include",
-    });
-
-    router.push("/admin/login");
+  const logout = () => {
+    sessionStorage.removeItem("adminToken");
+    router.replace("/admin/login");
   };
 
   if (loading) {

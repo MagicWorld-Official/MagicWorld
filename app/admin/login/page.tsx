@@ -24,20 +24,22 @@ export default function AdminLoginPage() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "include",
           body: JSON.stringify({ email, password }),
         }
       );
 
       const data = await res.json();
 
-      if (!res.ok || !data.success) {
+      if (!res.ok || !data.success || !data.token) {
         setError("Invalid credentials");
         setLoading(false);
         return;
       }
 
-      // backend already set httpOnly cookie
+      // ✅ STORE TOKEN (SESSION ONLY)
+      sessionStorage.setItem("adminToken", data.token);
+
+      // ✅ GO TO ADMIN
       window.location.href = "/admin";
     } catch (err) {
       setError("Server error. Try again.");
