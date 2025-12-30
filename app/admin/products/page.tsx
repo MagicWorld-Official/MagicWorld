@@ -40,7 +40,7 @@ if (!API_URL) {
   throw new Error("NEXT_PUBLIC_API_URL is not defined in .env.local");
 }
 
-// Get token from localStorage (common keys: "token", "authToken", "jwt")
+// Get token from sessionStorage (adminToken)
 const getToken = (): string | null => {
   if (typeof window === "undefined") return null;
   return sessionStorage.getItem("adminToken");
@@ -76,10 +76,12 @@ export default function ManageProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // null = checking
 
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState<(Product & { productType: ProductType }) | null>(null);
 
+  // Fetch products
   const fetchProducts = async () => {
     setLoading(true);
     setError(null);
@@ -168,11 +170,14 @@ export default function ManageProductsPage() {
   };
 
   const renameSection = (cat: string, index: number) => {
-    const current = editForm?.featuresData[cat][index]?.title || "";
+    if (!editForm?.featuresData?.[cat]?.[index]) return;
+
+    const current = editForm.featuresData[cat][index].title;
     const newTitle = prompt("Rename section:", current);
     if (!newTitle?.trim()) return;
+
     updateFeatures((prev) => {
-      const sections = [...prev[cat]];
+      const sections = [...(prev[cat] || [])];
       sections[index] = { ...sections[index], title: newTitle.trim() };
       return { ...prev, [cat]: sections };
     });
@@ -180,17 +185,22 @@ export default function ManageProductsPage() {
 
   const deleteSection = (cat: string, index: number) => {
     if (!confirm("Delete this section and all items?")) return;
+    if (!editForm?.featuresData?.[cat]) return;
+
     updateFeatures((prev) => ({
       ...prev,
-      [cat]: prev[cat].filter((_, i) => i !== index),
+      [cat]: (prev[cat] || []).filter((_, i) => i !== index),
     }));
   };
 
   const addItem = (cat: string, secIndex: number) => {
-    const text = prompt("Enter new item:");
+    if (!editForm?.featuresData?.[cat]?.[secIndex]) return;
+
+    const text = prompt("Enter new feature item:");
     if (!text?.trim()) return;
+
     updateFeatures((prev) => {
-      const sections = [...prev[cat]];
+      const sections = [...(prev[cat] || [])];
       sections[secIndex] = {
         ...sections[secIndex],
         items: [...sections[secIndex].items, text.trim()],
@@ -200,9 +210,12 @@ export default function ManageProductsPage() {
   };
 
   const editItem = (cat: string, secIndex: number, itemIndex: number) => {
-    const current = editForm?.featuresData[cat][secIndex]?.items[itemIndex] || "";
+    if (!editForm?.featuresData?.[cat]?.[secIndex]?.items[itemIndex]) return;
+
+    const current = editForm.featuresData[cat][secIndex].items[itemIndex];
     const newValue = prompt("Edit item:", current);
     if (newValue == null) return;
+
     updateFeatures((prev) => {
       const items = [...prev[cat][secIndex].items];
       items[itemIndex] = newValue.trim();
@@ -214,6 +227,8 @@ export default function ManageProductsPage() {
 
   const deleteItem = (cat: string, secIndex: number, itemIndex: number) => {
     if (!confirm("Delete this item?")) return;
+    if (!editForm?.featuresData?.[cat]?.[secIndex]) return;
+
     updateFeatures((prev) => {
       const items = prev[cat][secIndex].items.filter((_, i) => i !== itemIndex);
       const sections = [...prev[cat]];
@@ -225,7 +240,7 @@ export default function ManageProductsPage() {
   const saveEdit = async () => {
     if (!editForm) return;
 
-    const body: Partial<Product> & { productType?: string } = { ...editForm };
+    const body: Partial<Product> = { ...editForm };
 
     if (editForm.productType === "free") {
       body.prices = { day: 0, week: 0 };
@@ -235,7 +250,7 @@ export default function ManageProductsPage() {
       }
     }
 
-    delete body.productType;
+    delete (body as any).productType;
 
     try {
       const res = await apiFetch(`/products/${editForm.slug}`, {
@@ -253,36 +268,39 @@ export default function ManageProductsPage() {
     }
   };
 
+  // Check auth on mount
   useEffect(() => {
-    if (getToken()) {
-      fetchProducts();
-    } else {
-      setError("Please log in to manage products.");
-      setLoading(false);
+    const token = getToken();
+    if (!token) {
+      setIsAuthenticated(false);
+      router.replace("/admin/login");
+      return;
     }
-  }, []);
 
-  // If no token → show login prompt
-  if (!getToken()) {
+    setIsAuthenticated(true);
+    fetchProducts();
+  }, [router]);
+
+  // Show neutral "Loading..." during auth check or data load
+  if (isAuthenticated === null || loading) {
     return (
       <div className={styles.wrapper}>
-        <div className="container" style={{ textAlign: "center", padding: "5rem 1rem" }}>
-          <h1>Authentication Required</h1>
-          <p>You need to be logged in to access this page.</p>
-          <button
-            onClick={() => (window.location.href = "/login")}
-            style={{
-              padding: "12px 24px",
-              fontSize: "16px",
-              background: "#0070f3",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              cursor: "pointer",
-            }}
-          >
-            Go to Login
-          </button>
+        <div className="container">
+          <p className={styles.loading}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated === false) {
+    return null; // redirecting
+  }
+
+  if (error) {
+    return (
+      <div className={styles.wrapper}>
+        <div className="container">
+          <p className={styles.error}>{error}</p>
         </div>
       </div>
     );
@@ -293,17 +311,15 @@ export default function ManageProductsPage() {
       <div className="container">
         <h1 className={styles.title}>Manage Products</h1>
 
-        {loading && <p>Loading products...</p>}
-        {error && <p style={{ color: "red", margin: "1rem 0" }}>{error}</p>}
-        {!loading && !error && products.length === 0 && <p>No products found.</p>}
-
         <div className={styles.grid}>
           {products.map((item) => (
             <div key={item._id} className={styles.card}>
               <img src={item.image} className={styles.thumb} alt={item.name} />
+
               <div className={styles.info}>
                 <h3>{item.name}</h3>
                 <p className={styles.slug}>/{item.slug}</p>
+
                 {item.prices.day === 0 && item.prices.week === 0 ? (
                   <p className={styles.free}>Free Product</p>
                 ) : (
@@ -312,6 +328,7 @@ export default function ManageProductsPage() {
                   </p>
                 )}
               </div>
+
               <div className={styles.actions}>
                 <button className={styles.editBtn} onClick={() => openEdit(item)}>
                   Edit
@@ -330,7 +347,7 @@ export default function ManageProductsPage() {
             <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
               <h2 className={styles.modalTitle}>Edit Product: {editForm.name}</h2>
 
-              {/* Form fields same as before but cleaner */}
+              {/* Product Type */}
               <div className={styles.modalGroup}>
                 <label>Product Type</label>
                 <select
@@ -344,6 +361,7 @@ export default function ManageProductsPage() {
                 </select>
               </div>
 
+              {/* Basic Fields */}
               <div className={styles.modalGroup}>
                 <label>Name</label>
                 <input
@@ -393,6 +411,7 @@ export default function ManageProductsPage() {
                 </div>
               )}
 
+              {/* Download Link (Free only) */}
               <div className={styles.modalGroup}>
                 <label>Download Link (Free only)</label>
                 <input
@@ -402,6 +421,7 @@ export default function ManageProductsPage() {
                 />
               </div>
 
+              {/* Prices (Paid only) */}
               {editForm.productType === "paid" && (
                 <>
                   <div className={styles.modalGroup}>
@@ -417,6 +437,7 @@ export default function ManageProductsPage() {
                       }
                     />
                   </div>
+
                   <div className={styles.modalGroup}>
                     <label>1 Week Price (₹)</label>
                     <input
@@ -433,6 +454,7 @@ export default function ManageProductsPage() {
                 </>
               )}
 
+              {/* Features Toggle */}
               <div className={styles.modalGroup}>
                 <label>Enable Features Section</label>
                 <select
@@ -446,6 +468,7 @@ export default function ManageProductsPage() {
                 </select>
               </div>
 
+              {/* Features Builder */}
               {editForm.featuresEnabled && (
                 <div className={styles.featureBox}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
