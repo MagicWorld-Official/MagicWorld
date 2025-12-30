@@ -3,258 +3,315 @@
 import { useEffect, useState } from "react";
 import styles from "./manageProducts.module.css";
 
-type EditFormType = {
-  [key: string]: any;
-  featuresData: {
-    [key: string]: {
-      title: string;
-      items: string[];
-    }[];
-  };
+// Proper Types
+interface Price {
+  day: number;
+  week: number;
+}
+
+interface FeatureSection {
+  title: string;
+  items: string[];
+}
+
+interface FeaturesData {
+  [category: string]: FeatureSection[];
+}
+
+interface Product {
+  _id: string;
+  slug: string;
+  name: string;
+  desc: string;
+  image: string;
+  prices: Price;
+  downloadLink?: string;
+  statusEnabled?: boolean;
+  statusLabel?: string;
+  featuresEnabled?: boolean;
+  featuresData?: FeaturesData;
+}
+
+type ProductType = "paid" | "free";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!API_URL) {
+  throw new Error("NEXT_PUBLIC_API_URL is not defined in .env.local");
+}
+
+// Get token from localStorage (common keys: "token", "authToken", "jwt")
+const getToken = (): string | null => {
+  if (typeof window === "undefined") return null;
+  return sessionStorage.getItem("adminToken");
+};
+
+// Authenticated fetch helper
+const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
+  const token = getToken();
+  if (!token) {
+    throw new Error("No authentication token. Please log in.");
+  }
+
+  const headers = new Headers(options.headers || {});
+  headers.set("Authorization", `Bearer ${token}`);
+  if (options.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    headers,
+    cache: "no-store",
+  });
+
+  if (response.status === 401) {
+    throw new Error("Session expired. Please log in again.");
+  }
+
+  return response;
 };
 
 export default function ManageProductsPage() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [editOpen, setEditOpen] = useState(false);
-  const [editForm, setEditForm] = useState<EditFormType | null>(null);
+  const [editForm, setEditForm] = useState<(Product & { productType: ProductType }) | null>(null);
 
   const fetchProducts = async () => {
+    setLoading(true);
+    setError(null);
+
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/products`,
-        { cache: "no-store" }
-      );
+      const res = await apiFetch("/products");
+
+      if (!res.ok) throw new Error("Failed to load products");
 
       const data = await res.json();
       setProducts(Array.isArray(data.products) ? data.products : []);
-    } catch {
+    } catch (err: any) {
+      setError(err.message || "Could not load products.");
       setProducts([]);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const deleteProduct = async (slug: string) => {
-    if (!confirm("Delete this product?")) return;
+    if (!confirm("Are you sure you want to delete this product?")) return;
 
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/products/${slug}`,
-      {
-        method: "DELETE",
-        credentials: "include",
-      }
-    );
+    try {
+      const res = await apiFetch(`/products/${slug}`, { method: "DELETE" });
 
-    const data = await res.json();
+      if (!res.ok) throw new Error("Delete failed");
 
-    if (data.success) {
-      alert("Product deleted");
+      alert("Product deleted successfully!");
       fetchProducts();
+    } catch (err: any) {
+      alert(err.message || "Failed to delete product");
     }
   };
 
-  const openEdit = (product: any) => {
+  const openEdit = (product: Product) => {
     const isFree = product.prices.day === 0 && product.prices.week === 0;
 
     setEditForm({
       ...product,
       productType: isFree ? "free" : "paid",
-      statusEnabled: product.statusEnabled || false,
-      statusLabel: product.statusLabel || "",
-      featuresEnabled: product.featuresEnabled || false,
-      featuresData: product.featuresData || {},
+      statusEnabled: product.statusEnabled ?? false,
+      statusLabel: product.statusLabel ?? "",
+      featuresEnabled: product.featuresEnabled ?? false,
+      featuresData: product.featuresData ?? {},
     });
-
     setEditOpen(true);
   };
 
-  // ---------------------------
-// FEATURE ACTIONS
-  // ---------------------------
-
-  const addCategory = () => {
-    const name = prompt("New category:");
-    if (!name) return;
-
-    setEditForm(prev => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        featuresData: { ...prev.featuresData, [name]: [] }
-      };
-    });
+  // Immutable feature updates
+  const updateFeatures = (updater: (prev: FeaturesData) => FeaturesData) => {
+    setEditForm((prev) =>
+      prev ? { ...prev, featuresData: updater(prev.featuresData ?? {}) } : null
+    );
   };
 
-  const renameCategory = (cat: string) => {
-    const newName = prompt("Rename category:", cat);
-    if (!newName || newName === cat) return;
+  const addCategory = () => {
+    const name = prompt("Enter category name:");
+    if (!name?.trim()) return;
+    updateFeatures((prev) => ({ ...prev, [name.trim()]: [] }));
+  };
 
-    setEditForm(prev => {
-      if (!prev) return prev;
-      const copy = { ...prev.featuresData };
-      copy[newName] = copy[cat];
-      delete copy[cat];
-      return { ...prev, featuresData: copy };
+  const renameCategory = (oldName: string) => {
+    const newName = prompt("Rename category to:", oldName);
+    if (!newName?.trim() || newName.trim() === oldName) return;
+    updateFeatures((prev) => {
+      const { [oldName]: sections, ...rest } = prev;
+      return sections ? { ...rest, [newName.trim()]: sections } : rest;
     });
   };
 
   const deleteCategory = (cat: string) => {
-    if (!confirm("Delete category?")) return;
-
-    setEditForm(prev => {
-      if (!prev) return prev;
-      const copy = { ...prev.featuresData };
-      delete copy[cat];
-      return { ...prev, featuresData: copy };
+    if (!confirm(`Delete category "${cat}" and all its content?`)) return;
+    updateFeatures((prev) => {
+      const { [cat]: _, ...rest } = prev;
+      return rest;
     });
   };
 
   const addSection = (cat: string) => {
-    const title = prompt("New section:");
-    if (!title) return;
-
-    setEditForm(prev => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        featuresData: {
-          ...prev.featuresData,
-          [cat]: [...prev.featuresData[cat], { title, items: [] }]
-        }
-      };
-    });
+    const title = prompt("Enter section title:");
+    if (!title?.trim()) return;
+    updateFeatures((prev) => ({
+      ...prev,
+      [cat]: [...(prev[cat] || []), { title: title.trim(), items: [] }],
+    }));
   };
 
   const renameSection = (cat: string, index: number) => {
-    if (!editForm) return;
-
-    const curr = editForm.featuresData[cat][index].title;
-    const newTitle = prompt("Rename section:", curr);
-    if (!newTitle) return;
-
-    setEditForm(prev => {
-      if (!prev) return prev;
-      const copy = { ...prev.featuresData };
-      copy[cat][index].title = newTitle;
-      return { ...prev, featuresData: copy };
+    const current = editForm?.featuresData[cat][index]?.title || "";
+    const newTitle = prompt("Rename section:", current);
+    if (!newTitle?.trim()) return;
+    updateFeatures((prev) => {
+      const sections = [...prev[cat]];
+      sections[index] = { ...sections[index], title: newTitle.trim() };
+      return { ...prev, [cat]: sections };
     });
   };
 
   const deleteSection = (cat: string, index: number) => {
-    if (!confirm("Delete section?")) return;
-
-    setEditForm(prev => {
-      if (!prev) return prev;
-      const copy = { ...prev.featuresData };
-      copy[cat].splice(index, 1);
-      return { ...prev, featuresData: copy };
-    });
+    if (!confirm("Delete this section and all items?")) return;
+    updateFeatures((prev) => ({
+      ...prev,
+      [cat]: prev[cat].filter((_, i) => i !== index),
+    }));
   };
 
   const addItem = (cat: string, secIndex: number) => {
-    const text = prompt("New item:");
-    if (!text) return;
-
-    setEditForm(prev => {
-      if (!prev) return prev;
-      const copy = { ...prev.featuresData };
-      copy[cat][secIndex].items.push(text);
-      return { ...prev, featuresData: copy };
+    const text = prompt("Enter new item:");
+    if (!text?.trim()) return;
+    updateFeatures((prev) => {
+      const sections = [...prev[cat]];
+      sections[secIndex] = {
+        ...sections[secIndex],
+        items: [...sections[secIndex].items, text.trim()],
+      };
+      return { ...prev, [cat]: sections };
     });
   };
 
   const editItem = (cat: string, secIndex: number, itemIndex: number) => {
-    if (!editForm) return;
-
-    const curr = editForm.featuresData[cat][secIndex].items[itemIndex];
-    const newValue = prompt("Edit item:", curr);
-    if (!newValue) return;
-
-    setEditForm(prev => {
-      if (!prev) return prev;
-      const copy = { ...prev.featuresData };
-      copy[cat][secIndex].items[itemIndex] = newValue;
-      return { ...prev, featuresData: copy };
+    const current = editForm?.featuresData[cat][secIndex]?.items[itemIndex] || "";
+    const newValue = prompt("Edit item:", current);
+    if (newValue == null) return;
+    updateFeatures((prev) => {
+      const items = [...prev[cat][secIndex].items];
+      items[itemIndex] = newValue.trim();
+      const sections = [...prev[cat]];
+      sections[secIndex] = { ...sections[secIndex], items };
+      return { ...prev, [cat]: sections };
     });
   };
 
   const deleteItem = (cat: string, secIndex: number, itemIndex: number) => {
-    if (!confirm("Delete item?")) return;
-
-    setEditForm(prev => {
-      if (!prev) return prev;
-      const copy = { ...prev.featuresData };
-      copy[cat][secIndex].items.splice(itemIndex, 1);
-      return { ...prev, featuresData: copy };
+    if (!confirm("Delete this item?")) return;
+    updateFeatures((prev) => {
+      const items = prev[cat][secIndex].items.filter((_, i) => i !== itemIndex);
+      const sections = [...prev[cat]];
+      sections[secIndex] = { ...sections[secIndex], items };
+      return { ...prev, [cat]: sections };
     });
   };
-
-  // ---------------------------
-// SAVE PRODUCT
-  // ---------------------------
 
   const saveEdit = async () => {
     if (!editForm) return;
 
-    const body = { ...editForm };
+    const body: Partial<Product> & { productType?: string } = { ...editForm };
 
-    if (body.productType === "free") {
+    if (editForm.productType === "free") {
       body.prices = { day: 0, week: 0 };
-      if (!body.downloadLink.trim()) {
-        alert("Free product needs a download link.");
+      if (!editForm.downloadLink?.trim()) {
+        alert("Free products require a download link.");
         return;
       }
     }
 
     delete body.productType;
 
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/products/${editForm.slug}`,
-      {
+    try {
+      const res = await apiFetch(`/products/${editForm.slug}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify(body),
-      }
-    );
+      });
 
-    const data = await res.json();
-    if (data.success) {
-      alert("Updated");
+      if (!res.ok) throw new Error("Update failed");
+
+      alert("Product updated successfully!");
       setEditOpen(false);
       fetchProducts();
+    } catch (err: any) {
+      alert(err.message || "Failed to save changes");
     }
   };
 
   useEffect(() => {
-    fetchProducts();
+    if (getToken()) {
+      fetchProducts();
+    } else {
+      setError("Please log in to manage products.");
+      setLoading(false);
+    }
   }, []);
+
+  // If no token → show login prompt
+  if (!getToken()) {
+    return (
+      <div className={styles.wrapper}>
+        <div className="container" style={{ textAlign: "center", padding: "5rem 1rem" }}>
+          <h1>Authentication Required</h1>
+          <p>You need to be logged in to access this page.</p>
+          <button
+            onClick={() => (window.location.href = "/login")}
+            style={{
+              padding: "12px 24px",
+              fontSize: "16px",
+              background: "#0070f3",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
+            }}
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.wrapper}>
       <div className="container">
         <h1 className={styles.title}>Manage Products</h1>
 
+        {loading && <p>Loading products...</p>}
+        {error && <p style={{ color: "red", margin: "1rem 0" }}>{error}</p>}
+        {!loading && !error && products.length === 0 && <p>No products found.</p>}
+
         <div className={styles.grid}>
-          {products.map(item => (
+          {products.map((item) => (
             <div key={item._id} className={styles.card}>
               <img src={item.image} className={styles.thumb} alt={item.name} />
-
               <div className={styles.info}>
                 <h3>{item.name}</h3>
                 <p className={styles.slug}>/{item.slug}</p>
-
-                {item.prices.day === 0 ? (
+                {item.prices.day === 0 && item.prices.week === 0 ? (
                   <p className={styles.free}>Free Product</p>
                 ) : (
                   <p className={styles.paid}>
-                    ₹{item.prices.day} Day • ₹{item.prices.week} Week
+                    ₹{item.prices.day} / Day • ₹{item.prices.week} / Week
                   </p>
                 )}
               </div>
-
               <div className={styles.actions}>
                 <button className={styles.editBtn} onClick={() => openEdit(item)}>
                   Edit
@@ -267,43 +324,57 @@ export default function ManageProductsPage() {
           ))}
         </div>
 
-        {/* EDIT MODAL */}
+        {/* Edit Modal */}
         {editOpen && editForm && (
-          <div className={styles.modalOverlay}>
-            <div className={styles.modal}>
-              <h2 className={styles.modalTitle}>Edit Product</h2>
+          <div className={styles.modalOverlay} onClick={() => setEditOpen(false)}>
+            <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+              <h2 className={styles.modalTitle}>Edit Product: {editForm.name}</h2>
 
-              {/* Type */}
+              {/* Form fields same as before but cleaner */}
               <div className={styles.modalGroup}>
                 <label>Product Type</label>
                 <select
                   value={editForm.productType}
-                  onChange={(e) => setEditForm(prev => prev ? { ...prev, productType: e.target.value } : null)}
+                  onChange={(e) =>
+                    setEditForm((p) => p ? { ...p, productType: e.target.value as ProductType } : null)
+                  }
                 >
                   <option value="paid">Paid</option>
                   <option value="free">Free</option>
                 </select>
               </div>
 
-              {/* Basic */}
               <div className={styles.modalGroup}>
                 <label>Name</label>
                 <input
                   value={editForm.name}
-                  onChange={(e) => setEditForm(prev => prev ? { ...prev, name: e.target.value } : null)}
+                  onChange={(e) => setEditForm((p) => p ? { ...p, name: e.target.value } : null)}
                 />
               </div>
 
-              {/* STATUS BADGE */}
+              <div className={styles.modalGroup}>
+                <label>Description</label>
+                <input
+                  value={editForm.desc}
+                  onChange={(e) => setEditForm((p) => p ? { ...p, desc: e.target.value } : null)}
+                />
+              </div>
+
+              <div className={styles.modalGroup}>
+                <label>Image URL</label>
+                <input
+                  value={editForm.image}
+                  onChange={(e) => setEditForm((p) => p ? { ...p, image: e.target.value } : null)}
+                />
+              </div>
+
+              {/* Status Badge */}
               <div className={styles.modalGroup}>
                 <label>Status Badge</label>
                 <select
-                  value={String(editForm.statusEnabled)}
+                  value={editForm.statusEnabled ? "true" : "false"}
                   onChange={(e) =>
-                    setEditForm(prev => prev ? {
-                      ...prev,
-                      statusEnabled: e.target.value === "true",
-                    } : null)
+                    setEditForm((p) => p ? { ...p, statusEnabled: e.target.value === "true" } : null)
                   }
                 >
                   <option value="false">Disabled</option>
@@ -315,83 +386,59 @@ export default function ManageProductsPage() {
                 <div className={styles.modalGroup}>
                   <label>Status Text</label>
                   <input
-                    placeholder="Main Account Safe"
-                    value={editForm.statusLabel || ""}
-                    onChange={(e) =>
-                      setEditForm(prev => prev ? {
-                        ...prev,
-                        statusLabel: e.target.value,
-                      } : null)
-                    }
+                    placeholder="e.g. Main Account Safe"
+                    value={editForm.statusLabel}
+                    onChange={(e) => setEditForm((p) => p ? { ...p, statusLabel: e.target.value } : null)}
                   />
                 </div>
               )}
-
-              <div className={styles.modalGroup}>
-                <label>Description</label>
-                <input
-                  value={editForm.desc}
-                  onChange={(e) => setEditForm(prev => prev ? { ...prev, desc: e.target.value } : null)}
-                />
-              </div>
-
-              <div className={styles.modalGroup}>
-                <label>Image</label>
-                <input
-                  value={editForm.image}
-                  onChange={(e) => setEditForm(prev => prev ? { ...prev, image: e.target.value } : null)}
-                />
-              </div>
 
               <div className={styles.modalGroup}>
                 <label>Download Link (Free only)</label>
                 <input
                   value={editForm.downloadLink || ""}
                   disabled={editForm.productType === "paid"}
-                  onChange={(e) => setEditForm(prev => prev ? { ...prev, downloadLink: e.target.value } : null)}
+                  onChange={(e) => setEditForm((p) => p ? { ...p, downloadLink: e.target.value } : null)}
                 />
               </div>
 
-              {/* Price */}
               {editForm.productType === "paid" && (
                 <>
                   <div className={styles.modalGroup}>
-                    <label>1 Day Price</label>
+                    <label>1 Day Price (₹)</label>
                     <input
                       type="number"
+                      min="0"
                       value={editForm.prices.day}
                       onChange={(e) =>
-                        setEditForm(prev => prev ? {
-                          ...prev,
-                          prices: { ...prev.prices, day: Number(e.target.value) || 0 },
-                        } : null)
+                        setEditForm((p) =>
+                          p ? { ...p, prices: { ...p.prices, day: Number(e.target.value) || 0 } } : null
+                        )
                       }
                     />
                   </div>
-
                   <div className={styles.modalGroup}>
-                    <label>1 Week Price</label>
+                    <label>1 Week Price (₹)</label>
                     <input
                       type="number"
+                      min="0"
                       value={editForm.prices.week}
                       onChange={(e) =>
-                        setEditForm(prev => prev ? {
-                          ...prev,
-                          prices: { ...prev.prices, week: Number(e.target.value) || 0 },
-                        } : null)
+                        setEditForm((p) =>
+                          p ? { ...p, prices: { ...p.prices, week: Number(e.target.value) || 0 } } : null
+                        )
                       }
                     />
                   </div>
                 </>
               )}
 
-              {/* Enable features */}
               <div className={styles.modalGroup}>
-                <label>Enable Features</label>
+                <label>Enable Features Section</label>
                 <select
-                  value={String(editForm.featuresEnabled)}
+                  value={editForm.featuresEnabled ? "true" : "false"}
                   onChange={(e) =>
-                    setEditForm(prev => prev ? { ...prev, featuresEnabled: e.target.value === "true" } : null)
+                    setEditForm((p) => p ? { ...p, featuresEnabled: e.target.value === "true" } : null)
                   }
                 >
                   <option value="false">Disabled</option>
@@ -399,18 +446,18 @@ export default function ManageProductsPage() {
                 </select>
               </div>
 
-              {/* FEATURE BUILDER */}
               {editForm.featuresEnabled && (
                 <div className={styles.featureBox}>
-                  <h3>Features</h3>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
+                    <h3>Features Builder</h3>
+                    <button className={styles.addBtn} onClick={addCategory}>
+                      + Add Category
+                    </button>
+                  </div>
 
-                  <button className={styles.addBtn} onClick={addCategory}>
-                    + Add Category
-                  </button>
-
-                  {Object.keys(editForm.featuresData).map(cat => (
+                  {Object.entries(editForm.featuresData).map(([cat, sections]) => (
                     <div key={cat} className={styles.categoryBlock}>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                         <h4>{cat}</h4>
                         <div>
                           <button className={styles.smallBtn} onClick={() => renameCategory(cat)}>Rename</button>
@@ -419,9 +466,9 @@ export default function ManageProductsPage() {
                         </div>
                       </div>
 
-                      {editForm.featuresData[cat].map((sec: any, idx: number) => (
+                      {sections.map((sec, idx) => (
                         <div key={idx} className={styles.sectionBlock}>
-                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                             <strong>{sec.title}</strong>
                             <div>
                               <button className={styles.smallBtn} onClick={() => renameSection(cat, idx)}>Rename</button>
@@ -431,15 +478,19 @@ export default function ManageProductsPage() {
                           </div>
 
                           <ul className={styles.itemList}>
-                            {sec.items.map((item: string, itemIndex: number) => (
-                              <li key={itemIndex} style={{ display: "flex", justifyContent: "space-between" }}>
-                                {item}
-                                <div>
-                                  <button className={styles.smallBtn} onClick={() => editItem(cat, idx, itemIndex)}>Edit</button>
-                                  <button className={styles.smallBtn} onClick={() => deleteItem(cat, idx, itemIndex)}>Delete</button>
-                                </div>
-                              </li>
-                            ))}
+                            {sec.items.length === 0 ? (
+                              <li style={{ color: "#888", fontStyle: "italic" }}>No items yet</li>
+                            ) : (
+                              sec.items.map((item, iIdx) => (
+                                <li key={iIdx} style={{ display: "flex", justifyContent: "space-between" }}>
+                                  <span>{item}</span>
+                                  <div>
+                                    <button className={styles.smallBtn} onClick={() => editItem(cat, idx, iIdx)}>Edit</button>
+                                    <button className={styles.smallBtn} onClick={() => deleteItem(cat, idx, iIdx)}>Delete</button>
+                                  </div>
+                                </li>
+                              ))
+                            )}
                           </ul>
                         </div>
                       ))}
@@ -449,8 +500,12 @@ export default function ManageProductsPage() {
               )}
 
               <div className={styles.modalActions}>
-                <button className={styles.closeBtn} onClick={() => setEditOpen(false)}>Close</button>
-                <button className={styles.saveBtn} onClick={saveEdit}>Save</button>
+                <button className={styles.closeBtn} onClick={() => setEditOpen(false)}>
+                  Cancel
+                </button>
+                <button className={styles.saveBtn} onClick={saveEdit}>
+                  Save Changes
+                </button>
               </div>
             </div>
           </div>

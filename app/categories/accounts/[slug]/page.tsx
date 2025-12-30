@@ -1,3 +1,4 @@
+// app/categories/accounts/[slug]/page.tsx
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import styles from "./view.module.css";
@@ -5,123 +6,180 @@ import type { Metadata } from "next";
 
 interface AccountDetail {
   title: string;
-  type: string[];
+  badges: string[];
   img: string;
   desc: string;
   gallery: string[];
+  price: number;
+  isAvailable: boolean;
 }
 
 /* ===============================
-   METADATA
+   DYNAMIC METADATA
 ================================ */
 export async function generateMetadata(
   props: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
   const { slug } = await props.params;
+  const account = await fetchAccount(slug);
 
-  const formatted = slug
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  if (!account) {
+    return { title: "Account Not Found" };
+  }
 
   return {
-    title: `${formatted} | Premium Account`,
-    description: `View details and images for ${formatted}.`,
-    alternates: {
-      canonical: `https://yourdomain.com/categories/accounts/${slug}`,
+    title: `${account.title} | Premium Account`,
+    description: account.desc.slice(0, 160) + "...",
+    openGraph: {
+      title: account.title,
+      description: account.desc,
+      images: [account.img],
     },
   };
 }
 
 /* ===============================
-   DATA FETCH
+   FETCH DATA
 ================================ */
-async function getAccount(slug: string): Promise<AccountDetail | null> {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/premium-accounts/${slug}`,
-    { cache: "no-store" }
-  );
+async function fetchAccount(slug: string): Promise<AccountDetail | null> {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/premium-accounts/${slug}`,
+      { cache: "no-store" }
+    );
 
-  if (!res.ok) return null;
+    if (!res.ok) return null;
 
-  const data = await res.json();
-  const raw = data?.account ?? data;
+    const data = await res.json();
+    const raw = data?.account ?? data;
 
-  if (!raw || typeof raw !== "object") return null;
+    if (!raw) return null;
 
-  return {
-    title: raw.title ?? "",
-    desc: raw.desc ?? "",
-    img: raw.img ?? "",
-    type: Array.isArray(raw.type) ? raw.type : [],
-    gallery: Array.isArray(raw.gallery) ? raw.gallery : [],
-  };
+    return {
+      title: raw.title || "Premium Account",
+      badges: Array.isArray(raw.badges) ? raw.badges : [],
+      img: raw.img || "/placeholder.jpg",
+      desc: raw.desc || "No description available.",
+      gallery: Array.isArray(raw.gallery)
+        ? raw.gallery.filter((url: string) => url?.trim())
+        : [],
+      price: Number(raw.price) || 0,
+      isAvailable: raw.isAvailable !== false,
+    };
+  } catch {
+    return null;
+  }
 }
 
 /* ===============================
-   PAGE
+   MAIN PAGE
 ================================ */
 export default async function AccountViewPage(
   props: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await props.params;
-  const item = await getAccount(slug);
+  const item = await fetchAccount(slug);
 
   if (!item) notFound();
+
+  const safeMainImg = item.img || "/placeholder.jpg";
 
   return (
     <section className={styles.wrapper}>
       <div className="container">
-        <article className={styles.layout}>
-          {/* MAIN IMAGE */}
-          <label htmlFor="img-modal" className={styles.media}>
-            <Image
-              src={item.img}
-              alt={item.title}
-              fill
-              priority
-              sizes="(max-width: 900px) 100vw, 600px"
-              className={styles.image}
-            />
-            <span className={styles.zoomHint}>Click to view</span>
-          </label>
+        {/* Main Layout */}
+        <div className={styles.layout}>
+          {/* Main Image */}
+          <div className={styles.mainImageWrapper}>
+            <label htmlFor="main-modal" className={styles.mainImageLabel}>
+              <Image
+                src={safeMainImg}
+                alt={item.title}
+                fill
+                priority
+                sizes="(max-width: 900px) 100vw, 600px"
+                className={styles.mainImage}
+                placeholder="blur"
+                blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+              />
+              <div className={styles.zoomOverlay}>
+                <span>🔍 Click to zoom</span>
+              </div>
+            </label>
+          </div>
 
-          {/* CONTENT */}
+          {/* Content */}
           <div className={styles.content}>
             <h1 className={styles.title}>{item.title}</h1>
 
-            {item.type.length > 0 && (
-              <ul className={styles.badgeRow}>
-                {item.type.map((b) => (
-                  <li key={b} className={styles.badge}>{b}</li>
+            {/* Badges */}
+            {item.badges.length > 0 && (
+              <div className={styles.badges}>
+                {item.badges.map((badge) => (
+                  <span key={badge} className={styles.badge}>
+                    {badge}
+                  </span>
                 ))}
-              </ul>
+              </div>
             )}
 
-            <p className={styles.desc}>{item.desc}</p>
-            <button className={styles.cta}>Get Now</button>
+            {/* Price & Status */}
+            <div className={styles.priceStatus}>
+              {item.price > 0 && (
+                <span className={styles.price}>₹{item.price}</span>
+              )}
+              <span
+                className={`${styles.status} ${
+                  item.isAvailable ? styles.available : styles.sold
+                }`}
+              >
+                {item.isAvailable ? "Available" : "Sold Out"}
+              </span>
+            </div>
+
+            {/* Description */}
+            <div
+              className={styles.description}
+              dangerouslySetInnerHTML={{
+                __html: item.desc
+                  .replace(/\n/g, "<br>")
+                  .replace(/\*(.*?)\*/g, "<strong>$1</strong>"),
+              }}
+            />
+
+            {/* CTA */}
+            <button
+              className={styles.cta}
+              disabled={!item.isAvailable}
+            >
+              {item.isAvailable ? "Buy Now" : "Unavailable"}
+            </button>
           </div>
-        </article>
+        </div>
 
-        {/* GALLERY */}
+        {/* Gallery */}
         {item.gallery.length > 0 && (
-          <section className={styles.gallery}>
-            <h2 className={styles.galleryTitle}>Account Images</h2>
-
+          <section className={styles.gallerySection}>
+            <h2 className={styles.galleryTitle}>More Screenshots</h2>
             <div className={styles.galleryGrid}>
-              {item.gallery.map((img, i) => (
+              {item.gallery.map((url, i) => (
                 <label
                   key={i}
                   htmlFor={`gallery-${i}`}
                   className={styles.galleryItem}
                 >
                   <Image
-                    src={img}
-                    alt={`${item.title} image ${i + 1}`}
+                    src={url || "/placeholder.jpg"}
+                    alt={`${item.title} screenshot ${i + 1}`}
                     fill
-                    sizes="(max-width: 768px) 100vw, 240px"
-                    className={styles.galleryImg}
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                    className={styles.galleryImage}
+                    placeholder="blur"
+                    blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
                   />
-                  <span className={styles.zoomHint}>View</span>
+                  <div className={styles.zoomOverlay}>
+                    <span>🔍 View</span>
+                  </div>
                 </label>
               ))}
             </div>
@@ -129,42 +187,35 @@ export default async function AccountViewPage(
         )}
       </div>
 
-      {/* ========= MAIN IMAGE MODAL ========= */}
-      <input type="checkbox" id="img-modal" className={styles.modalToggle} />
+      {/* Main Image Modal */}
+      <input type="checkbox" id="main-modal" className={styles.modalToggle} />
       <div className={styles.modal}>
-        <label htmlFor="img-modal" className={styles.modalBackdrop} />
-        <div className={styles.modalContent}>
-          <label htmlFor="img-modal" className={styles.closeBtn}>×</label>
+        <label htmlFor="main-modal" className={styles.backdrop} />
+        <div className={styles.modalBox}>
+          <label htmlFor="main-modal" className={styles.close}>×</label>
           <Image
-            src={item.img}
+            src={safeMainImg}
             alt={item.title}
             fill
-            className={styles.modalImage}
+            className={styles.modalImg}
           />
         </div>
       </div>
 
-      {/* ========= GALLERY MODALS ========= */}
-      {item.gallery.map((img, i) => (
+      {/* Gallery Modals */}
+      {item.gallery.map((url, i) => (
         <div key={i}>
-          <input
-            type="checkbox"
-            id={`gallery-${i}`}
-            className={styles.modalToggle}
-          />
+          <input type="checkbox" id={`gallery-${i}`} className={styles.modalToggle} />
           <div className={styles.modal}>
-            <label
-              htmlFor={`gallery-${i}`}
-              className={styles.modalBackdrop}
-            />
-            <div className={styles.modalContent}>
-              <label
-                htmlFor={`gallery-${i}`}
-                className={styles.closeBtn}
-              >
-                ×
-              </label>
-              <Image src={img} alt="" fill className={styles.modalImage} />
+            <label htmlFor={`gallery-${i}`} className={styles.backdrop} />
+            <div className={styles.modalBox}>
+              <label htmlFor={`gallery-${i}`} className={styles.close}>×</label>
+              <Image
+                src={url || "/placeholder.jpg"}
+                alt={`${item.title} screenshot ${i + 1}`}
+                fill
+                className={styles.modalImg}
+              />
             </div>
           </div>
         </div>

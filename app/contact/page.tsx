@@ -29,7 +29,7 @@ export default function ContactPage() {
               <li>
                 <strong>Email:</strong>{" "}
                 <a href="mailto:magicworldofficial.contact@gmail.com">
-                  magicworldofficial.contact@gmail.com
+                  magicworldofficial.care@gmail.com
                 </a>
               </li>
               <li>

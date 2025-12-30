@@ -40,7 +40,7 @@ export default function Footer() {
             <p>
               Email:{" "}
               <a href="mailto:magicworldofficial.contact@gmail.com">
-                magicworldofficial.contact@gmail.com
+                magicworldofficial.care@gmail.com
               </a>
             </p>
           </div>

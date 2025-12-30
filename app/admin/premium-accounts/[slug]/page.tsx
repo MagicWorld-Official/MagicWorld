@@ -1,28 +1,42 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import styles from "../../admin.module.css";
+import Image from "next/image";
+import styles from "./edit.module.css";
 
-interface AccountItem {
-  _id: string;
-  title: string;
-  type: string[];
-  img: string;
-  gallery: string[];
-  desc: string;
-  price: number;
-  isAvailable: boolean;
-  slug: string;
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!API_URL) {
+  throw new Error("NEXT_PUBLIC_API_URL is not defined");
 }
 
-const generateSlug = (text: string) =>
-  text
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
+const getToken = (): string | null => {
+  if (typeof window === "undefined") return null;
+  return sessionStorage.getItem("adminToken");
+};
+
+const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
+  const token = getToken();
+  if (!token) throw new Error("Unauthorized");
+
+  const headers = new Headers(options.headers || {});
+  headers.set("Authorization", `Bearer ${token}`);
+  headers.set("Content-Type", "application/json");
+
+  const res = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
+
+  if (res.status === 401) {
+    sessionStorage.removeItem("adminToken");
+    window.location.href = "/admin/login";
+    throw new Error("Session expired");
+  }
+
+  return res;
+};
 
 export default function EditPremiumAccount({
   params,
@@ -30,171 +44,299 @@ export default function EditPremiumAccount({
   params: Promise<{ slug: string }>;
 }) {
   const router = useRouter();
-  const { slug } = use(params);
+  const paramsData = use(params);
+  const slug = paramsData.slug;
 
   const [loading, setLoading] = useState(true);
-  const [account, setAccount] = useState<AccountItem | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // null = checking
+
+  const [accountId, setAccountId] = useState<string>("");
 
   const [title, setTitle] = useState("");
-  const [type, setType] = useState<string[]>([]);
-  const [badge, setBadge] = useState("");
+  const [slugState, setSlugState] = useState("");
+  const [badges, setBadges] = useState<string[]>([]);
+  const [currentBadge, setCurrentBadge] = useState("");
 
   const [img, setImg] = useState("");
   const [gallery, setGallery] = useState<string[]>([]);
-  const [galleryInput, setGalleryInput] = useState("");
+  const [currentGalleryUrl, setCurrentGalleryUrl] = useState("");
 
   const [desc, setDesc] = useState("");
-  const [price, setPrice] = useState(0);
+  const [price, setPrice] = useState<number | "">("");
   const [isAvailable, setIsAvailable] = useState(true);
 
+  // Auto-generate slug
   useEffect(() => {
-    if (!slug) return;
+    if (title) {
+      const generated = title
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+      setSlugState(generated);
+    }
+  }, [title]);
 
-    const fetchData = async () => {
-      const res = await fetch(
-        `http://localhost:5000/premium-accounts/${slug}`,
-        { credentials: "include" }
-      );
+  // Check auth + fetch account
+  useEffect(() => {
+    const token = getToken();
 
-      if (!res.ok) {
-        router.push("/admin/premium-accounts");
-        return;
+    if (!token) {
+      setIsAuthenticated(false);
+      router.replace("/admin/login");
+      return;
+    }
+
+    setIsAuthenticated(true);
+
+    const fetchAccount = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const res = await apiFetch(`/premium-accounts/${slug}`);
+
+        if (!res.ok) throw new Error("Account not found");
+
+        const data = await res.json();
+
+        setAccountId(data._id || "");
+        setTitle(data.title || "");
+        setSlugState(data.slug || "");
+        setBadges(Array.isArray(data.badges) ? data.badges : []);
+        setImg(data.img || "");
+        setGallery(Array.isArray(data.gallery) ? data.gallery : []);
+        setDesc(data.desc || "");
+        setPrice(data.price || 0);
+        setIsAvailable(data.isAvailable !== false);
+      } catch (err: any) {
+        setError(err.message || "Failed to load account");
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-
-      const data = await res.json();
-
-      setAccount(data);
-      setTitle(data.title ?? "");
-      setType(Array.isArray(data.type) ? data.type : []);
-      setImg(data.img ?? "");
-      setGallery(Array.isArray(data.gallery) ? data.gallery : []);
-      setDesc(data.desc ?? "");
-      setPrice(Number(data.price) || 0);
-      setIsAvailable(Boolean(data.isAvailable));
-
-      setLoading(false);
     };
 
-    fetchData();
+    fetchAccount();
   }, [slug, router]);
+
+  // Badge handlers
+  const addBadge = () => {
+    if (!currentBadge.trim()) return;
+    if (badges.includes(currentBadge.trim())) {
+      alert("Badge already added");
+      return;
+    }
+    setBadges([...badges, currentBadge.trim()]);
+    setCurrentBadge("");
+  };
+
+  const removeBadge = (index: number) => {
+    setBadges(badges.filter((_, i) => i !== index));
+  };
+
+  const addGalleryImage = () => {
+    if (!currentGalleryUrl.trim()) return;
+    if (gallery.includes(currentGalleryUrl.trim())) {
+      alert("Image already added");
+      return;
+    }
+    setGallery([...gallery, currentGalleryUrl.trim()]);
+    setCurrentGalleryUrl("");
+  };
+
+  const removeGalleryImage = (index: number) => {
+    setGallery(gallery.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!account) return;
+    if (!accountId) {
+      alert("Account ID missing");
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
 
     const payload = {
-      title,
-      type,
-      img,
+      title: title.trim(),
+      badges,
+      img: img.trim(),
       gallery,
-      desc,
-      price,
+      desc: desc.trim(),
+      slug: slugState,
+      price: Number(price) || 0,
       isAvailable,
-      slug: generateSlug(title), // 🔥 AUTO-UPDATE SLUG
     };
 
-    const res = await fetch(
-      `http://localhost:5000/premium-accounts/${account._id}`,
-      {
+    try {
+      const res = await apiFetch(`/premium-accounts/admin/${accountId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify(payload),
-      }
-    );
+      });
 
-    if (res.ok) {
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err || "Update failed");
+      }
+
+      alert("Account updated successfully!");
       router.push("/admin/premium-accounts");
+    } catch (err: any) {
+      setError(err.message || "Failed to save");
+      alert(err.message || "Update failed");
+    } finally {
+      setSaving(false);
     }
   };
 
-  if (loading) return <p>Loading account…</p>;
+  // Show neutral loading until we know auth status
+  if (isAuthenticated === null || loading) {
+    return (
+      <div className={styles.wrapper}>
+        <div className="container">
+          <p className={styles.loading}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated === false) {
+    return null; // redirecting
+  }
+
+  if (error) {
+    return (
+      <div className={styles.wrapper}>
+        <div className="container">
+          <p className={styles.error}>{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className={styles.dashboard}>
+    <div className={styles.wrapper}>
       <div className="container">
-        <h1 className={styles.title}>Edit Premium Account</h1>
+        <h1 className={styles.pageTitle}>Edit Premium Account</h1>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          <label>Title</label>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-          />
-
-          <label>Badges</label>
-          <div className={styles.badgeInputRow}>
-            <input
-              value={badge}
-              onChange={(e) => setBadge(e.target.value)}
-            />
-            <button
-              type="button"
-              onClick={() => {
-                if (!badge.trim()) return;
-                setType([...type, badge.trim()]);
-                setBadge("");
-              }}
-            >
-              Add
-            </button>
+          {/* Title */}
+          <div className={styles.group}>
+            <label>Title *</label>
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
           </div>
 
-          <div className={styles.badgeList}>
-            {type.map((b, i) => (
-              <span key={i} className={styles.badge}>{b}</span>
-            ))}
+          <div className={styles.group}>
+            <label>Slug (auto-generated)</label>
+            <input type="text" value={slugState} readOnly className={styles.readonly} />
           </div>
 
-          <label>Main Image URL</label>
-          <input value={img} onChange={(e) => setImg(e.target.value)} required />
+          {/* Badges */}
+          <div className={styles.group}>
+            <label>Badges</label>
+            <div className={styles.inputRow}>
+              <input
+                type="text"
+                value={currentBadge}
+                onChange={(e) => setCurrentBadge(e.target.value)}
+                placeholder="e.g. 4K, Family Sharing"
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addBadge())}
+              />
+              <button type="button" onClick={addBadge}>
+                Add
+              </button>
+            </div>
 
-          <label>Gallery Images</label>
-          <div className={styles.badgeInputRow}>
-            <input
-              value={galleryInput}
-              onChange={(e) => setGalleryInput(e.target.value)}
-            />
-            <button
-              type="button"
-              onClick={() => {
-                if (!galleryInput.trim()) return;
-                setGallery([...gallery, galleryInput.trim()]);
-                setGalleryInput("");
-              }}
-            >
-              Add
-            </button>
+            {badges.length > 0 && (
+              <div className={styles.tagList}>
+                {badges.map((b, i) => (
+                  <span key={i} className={styles.tag}>
+                    {b}
+                    <button type="button" onClick={() => removeBadge(i)} className={styles.removeBtn}>
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className={styles.galleryList}>
-            {gallery.map((g, i) => (
-              <span key={i} className={styles.galleryItem}>{g}</span>
-            ))}
+          {/* Main Image */}
+          <div className={styles.group}>
+            <label>Main Image URL *</label>
+            <input type="url" value={img} onChange={(e) => setImg(e.target.value)} required />
+            {img && (
+              <div className={styles.imagePreview}>
+                <Image src={img} alt="Preview" width={400} height={225} className={styles.previewImg} unoptimized />
+              </div>
+            )}
           </div>
 
-          <label>Description</label>
-          <textarea value={desc} onChange={(e) => setDesc(e.target.value)} required />
+          {/* Gallery */}
+          <div className={styles.group}>
+            <label>Gallery Images</label>
+            <div className={styles.inputRow}>
+              <input
+                type="url"
+                value={currentGalleryUrl}
+                onChange={(e) => setCurrentGalleryUrl(e.target.value)}
+                placeholder="https://example.com/img.jpg"
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addGalleryImage())}
+              />
+              <button type="button" onClick={addGalleryImage}>
+                Add
+              </button>
+            </div>
 
-          <label>Price</label>
-          <input
-            type="number"
-            value={price}
-            onChange={(e) => setPrice(Number(e.target.value))}
-          />
+            {gallery.length > 0 && (
+              <div className={styles.galleryPreview}>
+                {gallery.map((url, i) => (
+                  <div key={i} className={styles.galleryItem}>
+                    <Image src={url} alt={`Gallery ${i + 1}`} width={200} height={120} className={styles.galleryThumb} unoptimized />
+                    <button type="button" onClick={() => removeGalleryImage(i)} className={styles.removeBtn}>
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-          <label>Available?</label>
-          <select
-            value={isAvailable ? "yes" : "no"}
-            onChange={(e) => setIsAvailable(e.target.value === "yes")}
-          >
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
+          {/* Description */}
+          <div className={styles.group}>
+            <label>Description *</label>
+            <textarea rows={6} value={desc} onChange={(e) => setDesc(e.target.value)} required />
+          </div>
 
-          <button type="submit" className={styles.submitBtn}>
-            Save Changes
+          {/* Price & Status */}
+          <div className={styles.row}>
+            <div className={styles.group}>
+              <label>Price (₹)</label>
+              <input
+                type="number"
+                min="0"
+                value={price}
+                onChange={(e) => setPrice(e.target.value ? Number(e.target.value) : "")}
+              />
+            </div>
+
+            <div className={styles.group}>
+              <label>Status</label>
+              <select value={isAvailable ? "available" : "sold"} onChange={(e) => setIsAvailable(e.target.value === "available")}>
+                <option value="available">Available</option>
+                <option value="sold">Sold / Unavailable</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" className={styles.submitBtn} disabled={saving}>
+            {saving ? "Saving..." : "Save Changes"}
           </button>
         </form>
       </div>
