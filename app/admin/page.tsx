@@ -22,7 +22,7 @@ export default function AdminDashboard() {
         setLoading(false);
       })
       .catch(() => {
-        window.location.href = "/admin/login";
+        router.replace("/admin/login");
       });
   }, [router]);
 
