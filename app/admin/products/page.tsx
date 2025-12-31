@@ -7,6 +7,7 @@ import styles from "./manageProducts.module.css";
 import ProductEditModal from "./ProductEditModal";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 
+// Minimal Product interface used only in this page (matches API response)
 interface Product {
   _id: string;
   slug: string;
@@ -14,7 +15,7 @@ interface Product {
   desc: string;
   image: string;
   prices: { day: number; week: number };
-  // ... other fields
+  // Add any other fields you display in the list if needed
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
@@ -75,7 +76,8 @@ export default function ManageProductsPage() {
     }
   };
 
-  const handleSave = async (product: Product) => {
+  const handleSave = async (product: any) => {
+    // We accept full product from modal (it has all fields)
     const method = product._id ? "PUT" : "POST";
     const url = product._id ? `/products/${product._id}` : "/products";
 

@@ -2,8 +2,41 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Product, FeaturesData } from "../../../lib/types/product"; // Use @ alias for cleaner imports
 import styles from "./manageProducts.module.css";
+
+// === All types defined locally ===
+interface Price {
+  day: number;
+  week: number;
+}
+
+interface FeatureSection {
+  title: string;
+  items: string[];
+}
+
+interface FeaturesData {
+  [category: string]: FeatureSection[];
+}
+
+interface Product {
+  _id?: string;
+  slug: string;
+  name: string;
+  desc: string;
+  image: string;
+  version: string;
+  size: string;
+  updated: string;
+  category: string;
+  type?: string;
+  prices: Price;
+  downloadLink?: string;
+  statusEnabled?: boolean;
+  statusLabel?: string;
+  featuresEnabled?: boolean;
+  featuresData?: FeaturesData;
+}
 
 type ProductType = "paid" | "free";
 
@@ -14,6 +47,7 @@ interface ProductEditModalProps {
   onSave: (product: Product) => Promise<void>;
 }
 
+// === Component ===
 export default function ProductEditModal({
   product,
   isOpen,
@@ -62,7 +96,6 @@ export default function ProductEditModal({
         statusLabel: product.statusLabel ?? "",
       });
     } else {
-      // Reset for new product
       setForm({
         _id: "",
         slug: "",
@@ -84,15 +117,12 @@ export default function ProductEditModal({
       });
     }
 
-    // Reset feature builder inputs
     setNewCategoryName("");
     setNewSectionTitle("");
     setSelectedCategoryForSection(null);
   }, [product, isOpen]);
 
-  const updateFeatures = (
-    updater: (prev: FeaturesData) => FeaturesData
-  ) => {
+  const updateFeatures = (updater: (prev: FeaturesData) => FeaturesData) => {
     setForm((prev) => ({
       ...prev,
       featuresData: updater(prev.featuresData ?? {}),
@@ -146,7 +176,6 @@ export default function ProductEditModal({
   };
 
   const handleSave = async () => {
-    // Validation
     if (!form.name.trim() || !form.slug.trim() || !form.image.trim()) {
       alert("Name, Slug, and Image URL are required.");
       return;
@@ -169,13 +198,10 @@ export default function ProductEditModal({
 
     setSaving(true);
     try {
-      const toSave: Product = {
-        ...(form as any),
-        productType: undefined, // Remove extra field
-      };
+      const toSave = { ...form };
       delete (toSave as any).productType;
 
-      await onSave(toSave);
+      await onSave(toSave as Product);
       onClose();
     } catch (err: any) {
       alert(err.message || "Failed to save product");
@@ -205,12 +231,17 @@ export default function ProductEditModal({
           </select>
         </div>
 
-        {/* Basic Info */}
+        {/* Name */}
         <div className={styles.modalGroup}>
           <label>Name *</label>
-          <input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Product Name" />
+          <input
+            value={form.name}
+            onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+            placeholder="Product Name"
+          />
         </div>
 
+        {/* Slug */}
         <div className={styles.modalGroup}>
           <label>Slug *</label>
           <input
@@ -229,6 +260,7 @@ export default function ProductEditModal({
           />
         </div>
 
+        {/* Description */}
         <div className={styles.modalGroup}>
           <label>Description</label>
           <textarea
@@ -239,6 +271,7 @@ export default function ProductEditModal({
           />
         </div>
 
+        {/* Image URL */}
         <div className={styles.modalGroup}>
           <label>Image URL *</label>
           <input
@@ -248,32 +281,53 @@ export default function ProductEditModal({
           />
         </div>
 
-        {/* Grid Rows */}
+        {/* Grid: Version & Size */}
         <div className={styles.grid2}>
           <div className={styles.modalGroup}>
             <label>Version</label>
-            <input value={form.version} onChange={(e) => setForm((p) => ({ ...p, version: e.target.value }))} placeholder="1.0.0" />
+            <input
+              value={form.version}
+              onChange={(e) => setForm((p) => ({ ...p, version: e.target.value }))}
+              placeholder="1.0.0"
+            />
           </div>
           <div className={styles.modalGroup}>
             <label>Size</label>
-            <input value={form.size} onChange={(e) => setForm((p) => ({ ...p, size: e.target.value }))} placeholder="150 MB" />
+            <input
+              value={form.size}
+              onChange={(e) => setForm((p) => ({ ...p, size: e.target.value }))}
+              placeholder="150 MB"
+            />
           </div>
         </div>
 
+        {/* Grid: Updated & Category */}
         <div className={styles.grid2}>
           <div className={styles.modalGroup}>
             <label>Updated Date</label>
-            <input value={form.updated} onChange={(e) => setForm((p) => ({ ...p, updated: e.target.value }))} placeholder="2025-12-31" />
+            <input
+              value={form.updated}
+              onChange={(e) => setForm((p) => ({ ...p, updated: e.target.value }))}
+              placeholder="2025-12-31"
+            />
           </div>
           <div className={styles.modalGroup}>
             <label>Category</label>
-            <input value={form.category} onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))} placeholder="Tools" />
+            <input
+              value={form.category}
+              onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}
+              placeholder="Tools"
+            />
           </div>
         </div>
 
+        {/* Type (Mods/Games) */}
         <div className={styles.modalGroup}>
           <label>Type</label>
-          <select value={form.type ?? ""} onChange={(e) => setForm((p) => ({ ...p, type: e.target.value || undefined }))}>
+          <select
+            value={form.type ?? ""}
+            onChange={(e) => setForm((p) => ({ ...p, type: e.target.value || undefined }))}
+          >
             <option value="">None</option>
             <option value="mods">Mods</option>
             <option value="games">Games</option>
@@ -303,7 +357,7 @@ export default function ProductEditModal({
           </div>
         )}
 
-        {/* Free Product */}
+        {/* Download Link (Free) */}
         {form.productType === "free" && (
           <div className={styles.modalGroup}>
             <label>Download Link *</label>
@@ -315,7 +369,7 @@ export default function ProductEditModal({
           </div>
         )}
 
-        {/* Paid Product */}
+        {/* Prices (Paid) */}
         {form.productType === "paid" && (
           <div className={styles.grid2}>
             <div className={styles.modalGroup}>
@@ -323,9 +377,13 @@ export default function ProductEditModal({
               <input
                 type="number"
                 min="0"
-                step="1"
                 value={form.prices.day}
-                onChange={(e) => setForm((p) => ({ ...p, prices: { ...p.prices, day: Number(e.target.value) || 0 } }))}
+                onChange={(e) =>
+                  setForm((p) => ({
+                    ...p,
+                    prices: { ...p.prices, day: Number(e.target.value) || 0 },
+                  }))
+                }
               />
             </div>
             <div className={styles.modalGroup}>
@@ -333,9 +391,13 @@ export default function ProductEditModal({
               <input
                 type="number"
                 min="0"
-                step="1"
                 value={form.prices.week}
-                onChange={(e) => setForm((p) => ({ ...p, prices: { ...p.prices, week: Number(e.target.value) || 0 } }))}
+                onChange={(e) =>
+                  setForm((p) => ({
+                    ...p,
+                    prices: { ...p.prices, week: Number(e.target.value) || 0 },
+                  }))
+                }
               />
             </div>
           </div>
@@ -499,7 +561,7 @@ export default function ProductEditModal({
           </div>
         )}
 
-        {/* Actions */}
+        {/* Action Buttons */}
         <div className={styles.modalActions}>
           <button onClick={onClose} disabled={saving} className={styles.closeBtn}>
             Cancel
