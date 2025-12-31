@@ -70,6 +70,7 @@ export default function AddProductPage() {
     size: string;
     updated: string;
     category: string;
+    type: "mods" | "games" | "";
     downloadLink: string;
     productType: "paid" | "free";
     prices: Price;
@@ -86,6 +87,7 @@ export default function AddProductPage() {
     size: "",
     updated: "",
     category: "",
+    type: "",
     downloadLink: "",
     productType: "paid",
     prices: { day: 0, week: 0 },
@@ -118,98 +120,132 @@ export default function AddProductPage() {
       return;
     }
 
-    if (name === "name") {
-      const generatedSlug = value
+    if (name === "type") {
+      const typeValue = value as "mods" | "games" | "";
+      setForm((prev) => ({ ...prev, [name]: typeValue }));
+      return;
+    }
+
+    if (name === "slug") {
+      const sanitizedSlug = value
         .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
-
-      setForm((prev) => ({
-        ...prev,
-        name: value,
-        slug: generatedSlug,
-      }));
+        .replace(/[^a-z0-9-]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+      setForm((prev) => ({ ...prev, slug: sanitizedSlug }));
       return;
     }
 
-    // Handle statusEnabled toggle
-    if (name === "statusEnabled") {
-      setForm((prev) => ({
-        ...prev,
-        statusEnabled: value === "true",
-      }));
-      return;
-    }
-
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Feature builders
+  // Feature builder helpers
+  const updateFeatures = (updater: (prev: FeaturesData) => FeaturesData) => {
+    setForm((prev) => ({ ...prev, featuresData: updater(prev.featuresData || {}) }));
+  };
+
   const addCategory = () => {
     const name = prompt("Enter category name:");
     if (!name?.trim()) return;
+    updateFeatures((prev) => ({ ...prev, [name.trim()]: [] }));
+  };
 
-    setForm((prev) => ({
-      ...prev,
-      featuresData: { ...prev.featuresData, [name.trim()]: [] },
-    }));
+  const renameCategory = (oldName: string) => {
+    const newName = prompt("Rename category to:", oldName);
+    if (!newName?.trim() || newName.trim() === oldName) return;
+    updateFeatures((prev) => {
+      const { [oldName]: sections, ...rest } = prev;
+      return sections ? { ...rest, [newName.trim()]: sections } : rest;
+    });
+  };
+
+  const deleteCategory = (cat: string) => {
+    if (!confirm(`Delete category "${cat}" and all its content?`)) return;
+    updateFeatures((prev) => {
+      const { [cat]: _, ...rest } = prev;
+      return rest;
+    });
   };
 
   const addSection = (cat: string) => {
     const title = prompt("Enter section title:");
     if (!title?.trim()) return;
-
-    setForm((prev) => ({
+    updateFeatures((prev) => ({
       ...prev,
-      featuresData: {
-        ...prev.featuresData,
-        [cat]: [...(prev.featuresData[cat] || []), { title: title.trim(), items: [] }],
-      },
+      [cat]: [...(prev[cat] || []), { title: title.trim(), items: [] }],
+    }));
+  };
+
+  const renameSection = (cat: string, index: number) => {
+    const current = form.featuresData?.[cat]?.[index]?.title || "";
+    const newTitle = prompt("Rename section:", current);
+    if (!newTitle?.trim()) return;
+    updateFeatures((prev) => {
+      const sections = [...(prev[cat] || [])];
+      sections[index] = { ...sections[index], title: newTitle.trim() };
+      return { ...prev, [cat]: sections };
+    });
+  };
+
+  const deleteSection = (cat: string, index: number) => {
+    if (!confirm("Delete this section and all items?")) return;
+    updateFeatures((prev) => ({
+      ...prev,
+      [cat]: (prev[cat] || []).filter((_, i) => i !== index),
     }));
   };
 
   const addItem = (cat: string, secIndex: number) => {
     const text = prompt("Enter new feature item:");
     if (!text?.trim()) return;
-
-    setForm((prev) => {
-      const sections = [...prev.featuresData[cat]];
+    updateFeatures((prev) => {
+      const sections = [...(prev[cat] || [])];
       sections[secIndex] = {
         ...sections[secIndex],
         items: [...sections[secIndex].items, text.trim()],
       };
-      return {
-        ...prev,
-        featuresData: { ...prev.featuresData, [cat]: sections },
-      };
+      return { ...prev, [cat]: sections };
     });
   };
 
-  // Submit
+  const editItem = (cat: string, secIndex: number, itemIndex: number) => {
+    const current = form.featuresData?.[cat]?.[secIndex]?.items[itemIndex] || "";
+    const newValue = prompt("Edit item:", current);
+    if (newValue === null || !newValue.trim()) return;
+    updateFeatures((prev) => {
+      const items = [...prev[cat][secIndex].items];
+      items[itemIndex] = newValue.trim();
+      const sections = [...prev[cat]];
+      sections[secIndex] = { ...sections[secIndex], items };
+      return { ...prev, [cat]: sections };
+    });
+  };
+
+  const deleteItem = (cat: string, secIndex: number, itemIndex: number) => {
+    if (!confirm("Delete this item?")) return;
+    updateFeatures((prev) => {
+      const items = prev[cat][secIndex].items.filter((_, i) => i !== itemIndex);
+      const sections = [...prev[cat]];
+      sections[secIndex] = { ...sections[secIndex], items };
+      return { ...prev, [cat]: sections };
+    });
+  };
+
+  // Handle form submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    // Validation
-    if (!form.name || !form.slug || !form.image || !form.desc) {
-      alert("Please fill in all required fields: Name, Slug, Image, Description.");
-      setLoading(false);
-      return;
-    }
-
-    if (form.productType === "free" && !form.downloadLink.trim()) {
-      alert("Free products require a download link.");
-      setLoading(false);
-      return;
-    }
-
-    if (form.productType === "paid" && form.prices.day <= 0 && form.prices.week <= 0) {
-      alert("Paid products must have at least one price greater than 0.");
+    if (form.productType === "free") {
+      form.prices = { day: 0, week: 0 };
+      if (!form.downloadLink.trim()) {
+        setError("Free products require a download link.");
+        setLoading(false);
+        return;
+      }
+    } else if (form.prices.day === 0 && form.prices.week === 0) {
+      setError("Paid products must have at least one positive price.");
       setLoading(false);
       return;
     }
@@ -221,78 +257,174 @@ export default function AddProductPage() {
       });
 
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || "Failed to add product");
+        const data = await res.json();
+        throw new Error(data.message || "Failed to add product");
       }
 
-      const data = await res.json();
-
-      if (data.success) {
-        alert("Product added successfully!");
-        // Reset form
-        setForm({
-          name: "",
-          slug: "",
-          desc: "",
-          image: "",
-          version: "",
-          size: "",
-          updated: "",
-          category: "",
-          downloadLink: "",
-          productType: "paid",
-          prices: { day: 0, week: 0 },
-          statusEnabled: false,
-          statusLabel: "",
-          featuresEnabled: false,
-          featuresData: {},
-        });
-        window.location.href = "/admin/products";
-      }
+      alert("Product added successfully!");
+      setForm({
+        name: "",
+        slug: "",
+        desc: "",
+        image: "",
+        version: "",
+        size: "",
+        updated: "",
+        category: "",
+        type: "",
+        downloadLink: "",
+        productType: "paid",
+        prices: { day: 0, week: 0 },
+        statusEnabled: false,
+        statusLabel: "",
+        featuresEnabled: false,
+        featuresData: {},
+      });
     } catch (err: any) {
-      const msg = err.message || "Something went wrong. Please try again.";
-      setError(msg);
-      alert(msg);
+      setError(err.message || "Failed to add product");
     } finally {
       setLoading(false);
     }
   };
-
-  // Auth check
-  useEffect(() => {
-    if (!getToken()) {
-      window.location.href = "/admin/login";
-    }
-  }, []);
-
-  if (!getToken()) {
-    return null;
-  }
 
   return (
     <div className={styles.wrapper}>
       <div className="container">
         <h1 className={styles.title}>Add New Product</h1>
 
-        {error && <p style={{ color: "red", marginBottom: "1rem" }}>{error}</p>}
+        {error && <p className={styles.error}>{error}</p>}
 
-        <form className={styles.form} onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className={styles.form}>
           {/* Product Type */}
           <div className={styles.group}>
             <label>Product Type</label>
-            <select name="productType" value={form.productType} onChange={handleChange}>
-              <option value="paid">Paid Product</option>
-              <option value="free">Free Product</option>
+            <select
+              name="productType"
+              value={form.productType}
+              onChange={handleChange}
+            >
+              <option value="paid">Paid</option>
+              <option value="free">Free</option>
             </select>
+          </div>
+
+          {/* Type (new field) */}
+          <div className={styles.group}>
+            <label>Type</label>
+            <select
+              name="type"
+              value={form.type}
+              onChange={handleChange}
+            >
+              <option value="">Select Type</option>
+              <option value="mods">Mods</option>
+              <option value="games">Games</option>
+            </select>
+          </div>
+
+          {/* Name */}
+          <div className={styles.group}>
+            <label>Name *</label>
+            <input
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              placeholder="Product Name"
+              required
+            />
+          </div>
+
+          {/* Slug */}
+          <div className={styles.group}>
+            <label>Slug *</label>
+            <input
+              name="slug"
+              value={form.slug}
+              onChange={handleChange}
+              placeholder="product-slug"
+              required
+            />
+          </div>
+
+          {/* Description */}
+          <div className={styles.group}>
+            <label>Description</label>
+            <textarea
+              name="desc"
+              value={form.desc}
+              onChange={handleChange}
+              rows={4}
+              placeholder="Product description..."
+            />
+          </div>
+
+          {/* Image URL */}
+          <div className={styles.group}>
+            <label>Image URL *</label>
+            <input
+              name="image"
+              value={form.image}
+              onChange={handleChange}
+              placeholder="https://example.com/image.jpg"
+              required
+            />
+          </div>
+
+          {/* Version */}
+          <div className={styles.group}>
+            <label>Version</label>
+            <input
+              name="version"
+              value={form.version}
+              onChange={handleChange}
+              placeholder="1.0.0"
+            />
+          </div>
+
+          {/* Size */}
+          <div className={styles.group}>
+            <label>Size</label>
+            <input
+              name="size"
+              value={form.size}
+              onChange={handleChange}
+              placeholder="50MB"
+            />
+          </div>
+
+          {/* Updated */}
+          <div className={styles.group}>
+            <label>Updated</label>
+            <input
+              name="updated"
+              value={form.updated}
+              onChange={handleChange}
+              placeholder="2023-10-01"
+            />
+          </div>
+
+          {/* Category */}
+          <div className={styles.group}>
+            <label>Category</label>
+            <input
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              placeholder="Category name"
+            />
           </div>
 
           {/* Status Badge */}
           <div className={styles.group}>
             <label>Status Badge</label>
             <select
-              name="statusEnabled"
               value={form.statusEnabled ? "true" : "false"}
-              onChange={handleChange}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  statusEnabled: e.target.value === "true",
+                }))
+              }
             >
               <option value="false">Disabled</option>
               <option value="true">Enabled</option>
@@ -301,116 +433,58 @@ export default function AddProductPage() {
 
           {form.statusEnabled && (
             <div className={styles.group}>
-              <label>Status Label (e.g. Main Account Safe)</label>
+              <label>Status Label</label>
               <input
-                name="statusLabel"
                 value={form.statusLabel}
-                onChange={handleChange}
-                placeholder="Main Account Safe"
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, statusLabel: e.target.value }))
+                }
+                placeholder="e.g. New!"
               />
             </div>
           )}
 
-          {/* Basic Info */}
-          <div className={styles.group}>
-            <label>Name *</label>
-            <input name="name" value={form.name} onChange={handleChange} required />
-          </div>
-
-          <div className={styles.group}>
-            <label>Slug (auto-generated)</label>
-            <input name="slug" value={form.slug} onChange={handleChange} required />
-          </div>
-
-          <div className={styles.group}>
-            <label>Description *</label>
-            <textarea
-              name="desc"
-              value={form.desc}
-              onChange={handleChange}
-              rows={4}
-              required
-              style={{ resize: "vertical" }}
-            />
-          </div>
-
-          <div className={styles.group}>
-            <label>Image URL *</label>
-            <input name="image" value={form.image} onChange={handleChange} required />
-          </div>
-
-          <div className={styles.group}>
-            <label>
-              Download Link {form.productType === "free" && <span style={{ color: "red" }}>*</span>}
-            </label>
-            <input
-              name="downloadLink"
-              value={form.downloadLink}
-              onChange={handleChange}
-              disabled={form.productType === "paid"}
-              required={form.productType === "free"}
-            />
-          </div>
-
-          {/* Extra Details */}
-          <div className={styles.row}>
+          {/* Download Link (for free) */}
+          {form.productType === "free" && (
             <div className={styles.group}>
-              <label>Version</label>
-              <input name="version" value={form.version} onChange={handleChange} />
-            </div>
-            <div className={styles.group}>
-              <label>Size (e.g. 150MB)</label>
-              <input name="size" value={form.size} onChange={handleChange} />
-            </div>
-          </div>
-
-          <div className={styles.row}>
-            <div className={styles.group}>
-              <label>Updated On</label>
+              <label>Download Link *</label>
               <input
-                name="updated"
-                value={form.updated}
+                name="downloadLink"
+                value={form.downloadLink}
                 onChange={handleChange}
-                placeholder="e.g. December 2025"
+                placeholder="https://example.com/download"
+                required={form.productType === "free"}
               />
             </div>
-            <div className={styles.group}>
-              <label>Category</label>
-              <input
-                name="category"
-                value={form.category}
-                onChange={handleChange}
-                placeholder="e.g. Cheat, Tool"
-              />
-            </div>
-          </div>
+          )}
 
-          {/* Prices */}
+          {/* Prices (for paid) */}
           {form.productType === "paid" && (
-            <div className={styles.row}>
+            <>
               <div className={styles.group}>
-                <label>1 Day Price (₹) *</label>
+                <label>1 Day Price (₹)</label>
                 <input
+                  name="prices.day"
                   type="number"
                   min="0"
-                  name="prices.day"
                   value={form.prices.day}
                   onChange={handleChange}
-                  required
+                  placeholder="0"
                 />
               </div>
+
               <div className={styles.group}>
-                <label>1 Week Price (₹) *</label>
+                <label>1 Week Price (₹)</label>
                 <input
+                  name="prices.week"
                   type="number"
                   min="0"
-                  name="prices.week"
                   value={form.prices.week}
                   onChange={handleChange}
-                  required
+                  placeholder="0"
                 />
               </div>
-            </div>
+            </>
           )}
 
           {/* Features Toggle */}
@@ -446,29 +520,41 @@ export default function AddProductPage() {
 
               {Object.entries(form.featuresData).map(([cat, sections]) => (
                 <div key={cat} className={styles.categoryBlock}>
-                  <h3 style={{ margin: "0.5rem 0" }}>{cat}</h3>
-                  <button type="button" className={styles.smallBtn} onClick={() => addSection(cat)}>
-                    + Add Section
-                  </button>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                    <h4>{cat}</h4>
+                    <div>
+                      <button type="button" className={styles.smallBtn} onClick={() => renameCategory(cat)}>Rename</button>
+                      <button type="button" className={styles.smallBtn} onClick={() => deleteCategory(cat)}>Delete</button>
+                      <button type="button" className={styles.smallBtn} onClick={() => addSection(cat)}>+ Section</button>
+                    </div>
+                  </div>
 
                   {sections.map((sec, idx) => (
                     <div key={idx} className={styles.sectionBlock}>
-                      <strong>{sec.title}</strong>
-                      <button type="button" className={styles.smallBtn} onClick={() => addItem(cat, idx)}>
-                        + Add Item
-                      </button>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                        <strong>{sec.title}</strong>
+                        <div>
+                          <button type="button" className={styles.smallBtn} onClick={() => renameSection(cat, idx)}>Rename</button>
+                          <button type="button" className={styles.smallBtn} onClick={() => deleteSection(cat, idx)}>Delete</button>
+                          <button type="button" className={styles.smallBtn} onClick={() => addItem(cat, idx)}>+ Item</button>
+                        </div>
+                      </div>
 
-                      {sec.items.length === 0 ? (
-                        <p style={{ color: "#888", fontSize: "0.9rem", margin: "0.5rem 0" }}>
-                          No items yet
-                        </p>
-                      ) : (
-                        <ul className={styles.itemList}>
-                          {sec.items.map((item, iIdx) => (
-                            <li key={iIdx}>{item}</li>
-                          ))}
-                        </ul>
-                      )}
+                      <ul className={styles.itemList}>
+                        {sec.items.length === 0 ? (
+                          <li style={{ color: "#888", fontStyle: "italic" }}>No items yet</li>
+                        ) : (
+                          sec.items.map((item, iIdx) => (
+                            <li key={iIdx} style={{ display: "flex", justifyContent: "space-between" }}>
+                              <span>{item}</span>
+                              <div>
+                                <button type="button" className={styles.smallBtn} onClick={() => editItem(cat, idx, iIdx)}>Edit</button>
+                                <button type="button" className={styles.smallBtn} onClick={() => deleteItem(cat, idx, iIdx)}>Delete</button>
+                              </div>
+                            </li>
+                          ))
+                        )}
+                      </ul>
                     </div>
                   ))}
                 </div>

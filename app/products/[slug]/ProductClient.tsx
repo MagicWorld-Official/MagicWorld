@@ -5,11 +5,7 @@ import Image from "next/image";
 import styles from "./product.module.css";
 import Features from "../../../components/features/Features";
 
-// Define the expected shape for featuresData (adjust if your Features component expects something more specific)
-type FeaturesData = Record<
-  string,
-  { title: string; items: string[] }[]
->;
+type FeaturesData = Record<string, { title: string; items: string[] }[]>;
 
 type Product = {
   name: string;
@@ -19,49 +15,42 @@ type Product = {
   size?: string;
   updated?: string;
   longDesc?: string;
-
-  /* STATUS */
   statusEnabled?: boolean;
   statusLabel?: string;
-
   prices?: { day?: number; week?: number };
   downloadLink?: string;
   featuresEnabled?: boolean;
-  featuresData?: FeaturesData; // Now properly typed as optional FeaturesData
+  featuresData?: FeaturesData;
 };
 
 export default function ProductClient({ product }: { product: Product }) {
-  const isFree =
-    (product.prices?.day ?? 0) === 0 && (product.prices?.week ?? 0) === 0;
+  const isFree = (product.prices?.day ?? 0) === 0 && (product.prices?.week ?? 0) === 0;
 
-  // ORDER POPUP
+  // ORDER STATE
   const [orderOpen, setOrderOpen] = useState(false);
-  const [plan, setPlan] = useState("");
+  const [plan, setPlan] = useState<"1 Day" | "1 Week" | "">("");
   const [email, setEmail] = useState("");
   const [telegram, setTelegram] = useState("");
   const [file, setFile] = useState<File | null>(null);
-
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
+  // Reset message when modal closes
   useEffect(() => {
-    if (!orderOpen) {
-      setMessage(null);
-    }
+    if (!orderOpen) setMessage(null);
   }, [orderOpen]);
 
+  // Close on Escape key
   useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOrderOpen(false);
-    }
-    if (orderOpen) window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    const handleEsc = (e: KeyboardEvent) => e.key === "Escape" && setOrderOpen(false);
+    if (orderOpen) window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
   }, [orderOpen]);
 
-  const openOrder = (selectedPlan: string) => {
+  const openOrder = (selectedPlan: "1 Day" | "1 Week") => {
     setPlan(selectedPlan);
     setOrderOpen(true);
   };
@@ -76,40 +65,34 @@ export default function ProductClient({ product }: { product: Product }) {
   };
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0] ?? null;
-    if (!f) {
+    const file = e.target.files?.[0];
+    if (!file) {
       setFile(null);
       return;
     }
 
-    if (!ACCEPTED_TYPES.includes(f.type)) {
-      setMessage({ type: "error", text: "Only JPG, PNG or WEBP images are allowed." });
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setMessage({ type: "error", text: "Only JPG, PNG, or WEBP images are allowed." });
       setFile(null);
       return;
     }
 
-    if (f.size > MAX_FILE_SIZE) {
-      setMessage({ type: "error", text: "File is too large. Max 5MB allowed." });
+    if (file.size > MAX_FILE_SIZE) {
+      setMessage({ type: "error", text: "File too large. Maximum size is 5MB." });
       setFile(null);
       return;
     }
 
-    setFile(f);
+    setFile(file);
     setMessage(null);
   };
 
   const placeOrder = async () => {
     setMessage(null);
 
-    if (!email.trim() || !telegram.trim()) {
-      setMessage({ type: "error", text: "Email and Telegram Username are required." });
-      return;
-    }
-
-    if (!file) {
-      setMessage({ type: "error", text: "Payment screenshot is required." });
-      return;
-    }
+    if (!email.trim()) return setMessage({ type: "error", text: "Email is required." });
+    if (!telegram.trim()) return setMessage({ type: "error", text: "Telegram username is required." });
+    if (!file) return setMessage({ type: "error", text: "Payment screenshot is required." });
 
     setLoading(true);
 
@@ -117,55 +100,33 @@ export default function ProductClient({ product }: { product: Product }) {
       const formData = new FormData();
       formData.append("productName", product.name);
       formData.append("plan", plan);
-      formData.append(
-        "price",
-        String(plan === "1 Day" ? product.prices?.day ?? 0 : product.prices?.week ?? 0)
-      );
-      formData.append("email", email);
-      formData.append("telegram", telegram);
+      formData.append("price", String(plan === "1 Day" ? product.prices?.day ?? 0 : product.prices?.week ?? 0));
+      formData.append("email", email.trim());
+      formData.append("telegram", telegram.trim());
       formData.append("status", "pending");
       formData.append("file", file);
-
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders/upload`, {
         method: "POST",
         body: formData,
         credentials: "include",
-        signal: controller.signal,
-        headers: {
-          Accept: "application/json",
-        },
       });
 
-      clearTimeout(timeout);
-
       if (!res.ok) {
-        let text = "Failed to place order.";
-        try {
-          const errBody = await res.json();
-          if (errBody?.message) text = errBody.message;
-        } catch {}
-        setMessage({ type: "error", text });
-        setLoading(false);
-        return;
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Failed to submit order. Please try again.");
       }
 
       const data = await res.json();
 
-      if (data?.success) {
-        setMessage({ type: "success", text: "Order placed! We'll verify payment manually." });
-        setTimeout(() => closeOrder(), 1800);
+      if (data.success) {
+        setMessage({ type: "success", text: "Order submitted successfully! We'll verify your payment soon." });
+        setTimeout(closeOrder, 2500);
       } else {
-        setMessage({ type: "error", text: data?.message || "Failed to place order." });
+        setMessage({ type: "error", text: data.message || "Order failed. Please try again." });
       }
     } catch (err: any) {
-      if (err?.name === "AbortError") {
-        setMessage({ type: "error", text: "Request timed out. Try again." });
-      } else {
-        setMessage({ type: "error", text: "Network error. Try again later." });
-      }
+      setMessage({ type: "error", text: err.message || "Network error. Check your connection and try again." });
     } finally {
       setLoading(false);
     }
@@ -176,7 +137,7 @@ export default function ProductClient({ product }: { product: Product }) {
       <section className={styles.product}>
         <div className="container">
           <div className={styles.inner}>
-            {/* LEFT IMAGE */}
+            {/* Image Section */}
             <div className={styles.left}>
               <div className={styles.imageWrap}>
                 {product.image ? (
@@ -184,43 +145,48 @@ export default function ProductClient({ product }: { product: Product }) {
                     src={product.image}
                     alt={product.name}
                     fill
-                    className={styles.image}
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     priority
-                    sizes="(max-width: 900px) 100vw, 420px"
+                    className={styles.image}
+                    unoptimized // ← Fixes all external image errors permanently
                   />
                 ) : (
-                  <div className={styles.imagePlaceholder}>No image</div>
+                  <div className={styles.imagePlaceholder} />
                 )}
               </div>
             </div>
 
-            {/* RIGHT INFO */}
+            {/* Info Section */}
             <div className={styles.right}>
-              <h1 className={styles.title}>{product.name}</h1>
               {product.statusEnabled && product.statusLabel && (
-                <div className={styles.statusBadge}>
-                  {product.statusLabel}
-                </div>
+                <span className={styles.statusBadge}>{product.statusLabel}</span>
               )}
-              <p className={styles.desc}>{product.desc}</p>
+
+              <h1 className={styles.title}>{product.name}</h1>
+              {product.desc && <p className={styles.desc}>{product.desc}</p>}
 
               <ul className={styles.meta}>
-                <li>
-                  <strong>Version:</strong> {product.version ?? "—"}
-                </li>
-                <li>
-                  <strong>Size:</strong> {product.size ?? "—"}
-                </li>
-                <li>
-                  <strong>Updated:</strong> {product.updated ?? "—"}
-                </li>
+                {product.version && (
+                  <li><strong>Version:</strong> {product.version}</li>
+                )}
+                {product.size && (
+                  <li><strong>Size:</strong> {product.size}</li>
+                )}
+                {product.updated && (
+                  <li><strong>Updated:</strong> {product.updated}</li>
+                )}
               </ul>
 
               {product.longDesc && <p className={styles.longDesc}>{product.longDesc}</p>}
 
               <div className={styles.buttons}>
                 {isFree ? (
-                  <a href={product.downloadLink} className={styles.downloadBtn} download>
+                  <a
+                    href={product.downloadLink || "#"}
+                    className={styles.downloadBtn}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     Download Free
                   </a>
                 ) : (
@@ -232,7 +198,6 @@ export default function ProductClient({ product }: { product: Product }) {
                     >
                       Buy 1 Day – ₹{product.prices?.day ?? "—"}
                     </button>
-
                     <button
                       className={styles.buyBtn}
                       onClick={() => openOrder("1 Week")}
@@ -248,89 +213,68 @@ export default function ProductClient({ product }: { product: Product }) {
         </div>
       </section>
 
-      {/* FEATURES - Only render if enabled AND data exists */}
+      {/* Features Section */}
       {product.featuresEnabled && product.featuresData && (
         <Features data={product.featuresData} />
       )}
 
-      {/* ORDER POPUP */}
+      {/* Order Modal */}
       {orderOpen && (
-        <div
-          className={styles.orderOverlay}
-          onClick={closeOrder}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Order dialog"
-        >
-          <div
-            className={styles.orderBox}
-            onClick={(e) => e.stopPropagation()}
-            tabIndex={-1}
-          >
-            <h2 className={styles.orderTitle}>Complete Purchase</h2>
+        <div className={styles.orderOverlay} onClick={closeOrder}>
+          <div className={styles.orderBox} onClick={(e) => e.stopPropagation()}>
+            <h2 className={styles.orderTitle}>Complete Your Purchase</h2>
 
-            <p className={styles.orderProduct}>
-              <strong>Product:</strong> {product.name}
-            </p>
-            <p className={styles.orderPlan}>
-              <strong>Plan:</strong> {plan}
-            </p>
+            <div className={styles.orderSummary}>
+              <p><strong>Product:</strong> {product.name}</p>
+              <p><strong>Plan:</strong> {plan}</p>
+              <p><strong>Price:</strong> ₹{plan === "1 Day" ? product.prices?.day : product.prices?.week}</p>
+            </div>
 
             <div className={styles.payBox}>
-              <h3>Send Payment</h3>
+              <h3>Payment Instructions</h3>
               <p>
-                UPI ID: <b>{process.env.NEXT_PUBLIC_UPI_ID ?? "yodhdhillon02@ybl"}</b>
+                Send payment to UPI ID: <strong>{process.env.NEXT_PUBLIC_UPI_ID || "yodhdhillon02@ybl"}</strong>
               </p>
-              <p>After payment, upload screenshot below.</p>
+              <p>After payment, upload a clear screenshot below.</p>
             </div>
 
             <div className={styles.orderGroup}>
-              <label htmlFor="order-email">Email Address</label>
+              <label>Email Address *</label>
               <input
-                id="order-email"
                 type="email"
-                placeholder="example@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
                 disabled={loading}
+                required
               />
             </div>
 
             <div className={styles.orderGroup}>
-              <label htmlFor="order-telegram">Telegram Username</label>
+              <label>Telegram Username *</label>
               <input
-                id="order-telegram"
                 type="text"
-                placeholder="@username"
                 value={telegram}
                 onChange={(e) => setTelegram(e.target.value)}
+                placeholder="@yourusername"
                 disabled={loading}
+                required
               />
             </div>
 
             <div className={styles.orderGroup}>
-              <label htmlFor="order-file">Upload Payment Screenshot</label>
+              <label>Payment Screenshot *</label>
               <input
-                id="order-file"
                 type="file"
                 accept="image/*"
                 onChange={onFileChange}
                 disabled={loading}
               />
-              <small style={{ color: "#666" }}>Max 5MB. JPG / PNG / WEBP.</small>
+              <small>Max 5MB • JPG, PNG, WEBP</small>
             </div>
 
             {message && (
-              <div
-                role="status"
-                style={{
-                  marginTop: 12,
-                  padding: 10,
-                  borderRadius: 8,
-                  background: message.type === "error" ? "#ffecec" : "#e6ffed",
-                  color: message.type === "error" ? "#a00" : "#064e12",
-                }}
-              >
+              <div className={message.type === "success" ? styles.successMsg : styles.errorMsg}>
                 {message.text}
               </div>
             )}
@@ -340,11 +284,14 @@ export default function ProductClient({ product }: { product: Product }) {
                 className={styles.confirmBtn}
                 onClick={placeOrder}
                 disabled={loading}
-                type="button"
               >
                 {loading ? "Submitting..." : "Submit Order"}
               </button>
-              <button className={styles.cancelBtn} onClick={closeOrder} type="button" disabled={loading}>
+              <button
+                className={styles.cancelBtn}
+                onClick={closeOrder}
+                disabled={loading}
+              >
                 Cancel
               </button>
             </div>

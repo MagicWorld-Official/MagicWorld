@@ -33,7 +33,7 @@ export default function Services() {
               Refined digital tools crafted to streamline workflows and
               improve performance.
             </p>
-            <Link href="/categories/hacks-mods" className={styles.cardBtn}>
+            <Link href="/categories/utilities-mods" className={styles.cardBtn}>
               Explore
             </Link>
           </article>
