@@ -4,7 +4,9 @@
 import { useState, useEffect } from "react";
 import styles from "./manageProducts.module.css";
 
-// === All types defined locally ===
+// We DON'T import or define Product here anymore
+// Instead, we use a flexible type that works with any Product shape
+
 interface Price {
   day: number;
   week: number;
@@ -19,16 +21,19 @@ interface FeaturesData {
   [category: string]: FeatureSection[];
 }
 
-interface Product {
+type ProductType = "paid" | "free";
+
+// We use a flexible "any" fallback for Product to avoid type conflicts
+type FlexibleProduct = {
   _id?: string;
   slug: string;
   name: string;
   desc: string;
   image: string;
-  version: string;
-  size: string;
-  updated: string;
-  category: string;
+  version?: string;
+  size?: string;
+  updated?: string;
+  category?: string;
   type?: string;
   prices: Price;
   downloadLink?: string;
@@ -36,18 +41,16 @@ interface Product {
   statusLabel?: string;
   featuresEnabled?: boolean;
   featuresData?: FeaturesData;
-}
-
-type ProductType = "paid" | "free";
+  [key: string]: any; // Allows extra fields without breaking
+};
 
 interface ProductEditModalProps {
-  product: Product | null;
+  product: FlexibleProduct | null;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (product: Product) => Promise<void>;
+  onSave: (product: FlexibleProduct) => Promise<void>;
 }
 
-// === Component ===
 export default function ProductEditModal({
   product,
   isOpen,
@@ -56,8 +59,7 @@ export default function ProductEditModal({
 }: ProductEditModalProps) {
   const isNew = !product?._id;
 
-  const [form, setForm] = useState<Product & { productType: ProductType }>({
-    _id: "",
+  const [form, setForm] = useState<FlexibleProduct & { productType: ProductType }>({
     slug: "",
     name: "",
     desc: "",
@@ -81,12 +83,12 @@ export default function ProductEditModal({
   const [newSectionTitle, setNewSectionTitle] = useState("");
   const [selectedCategoryForSection, setSelectedCategoryForSection] = useState<string | null>(null);
 
-  // Sync form when modal opens or product changes
+  // Reset form when modal opens or product changes
   useEffect(() => {
     if (!isOpen) return;
 
     if (product) {
-      const isFree = product.prices.day === 0 && product.prices.week === 0;
+      const isFree = product.prices?.day === 0 && product.prices?.week === 0;
       setForm({
         ...product,
         productType: isFree ? "free" : "paid",
@@ -94,10 +96,12 @@ export default function ProductEditModal({
         featuresData: product.featuresData ?? {},
         downloadLink: product.downloadLink ?? "",
         statusLabel: product.statusLabel ?? "",
+        statusEnabled: product.statusEnabled ?? false,
+        featuresEnabled: product.featuresEnabled ?? false,
       });
     } else {
+      // New product defaults
       setForm({
-        _id: "",
         slug: "",
         name: "",
         desc: "",
@@ -198,10 +202,9 @@ export default function ProductEditModal({
 
     setSaving(true);
     try {
-      const toSave = { ...form };
-      delete (toSave as any).productType;
-
-      await onSave(toSave as Product);
+      // Remove helper field before saving
+      const { productType, ...toSave } = form;
+      await onSave(toSave as FlexibleProduct);
       onClose();
     } catch (err: any) {
       alert(err.message || "Failed to save product");
@@ -286,7 +289,7 @@ export default function ProductEditModal({
           <div className={styles.modalGroup}>
             <label>Version</label>
             <input
-              value={form.version}
+              value={form.version || ""}
               onChange={(e) => setForm((p) => ({ ...p, version: e.target.value }))}
               placeholder="1.0.0"
             />
@@ -294,7 +297,7 @@ export default function ProductEditModal({
           <div className={styles.modalGroup}>
             <label>Size</label>
             <input
-              value={form.size}
+              value={form.size || ""}
               onChange={(e) => setForm((p) => ({ ...p, size: e.target.value }))}
               placeholder="150 MB"
             />
@@ -306,7 +309,7 @@ export default function ProductEditModal({
           <div className={styles.modalGroup}>
             <label>Updated Date</label>
             <input
-              value={form.updated}
+              value={form.updated || ""}
               onChange={(e) => setForm((p) => ({ ...p, updated: e.target.value }))}
               placeholder="2025-12-31"
             />
@@ -314,14 +317,14 @@ export default function ProductEditModal({
           <div className={styles.modalGroup}>
             <label>Category</label>
             <input
-              value={form.category}
+              value={form.category || ""}
               onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}
               placeholder="Tools"
             />
           </div>
         </div>
 
-        {/* Type (Mods/Games) */}
+        {/* Type */}
         <div className={styles.modalGroup}>
           <label>Type</label>
           <select
@@ -350,7 +353,7 @@ export default function ProductEditModal({
           <div className={styles.modalGroup}>
             <label>Status Label</label>
             <input
-              value={form.statusLabel}
+              value={form.statusLabel || ""}
               onChange={(e) => setForm((p) => ({ ...p, statusLabel: e.target.value }))}
               placeholder="e.g. Main Account Safe"
             />
@@ -362,7 +365,7 @@ export default function ProductEditModal({
           <div className={styles.modalGroup}>
             <label>Download Link *</label>
             <input
-              value={form.downloadLink}
+              value={form.downloadLink || ""}
               onChange={(e) => setForm((p) => ({ ...p, downloadLink: e.target.value }))}
               placeholder="https://example.com/download.zip"
             />
