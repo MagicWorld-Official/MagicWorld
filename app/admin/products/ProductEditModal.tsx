@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Product } from "@/lib/types/product"; // Use @ alias for cleaner imports
+import { Product } from "../../../lib/types/product"; // Use @ alias for cleaner imports
 import styles from "./manageProducts.module.css";
 
 type ProductType = "paid" | "free";
