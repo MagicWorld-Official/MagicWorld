@@ -85,6 +85,11 @@ export default function AdminDashboard() {
             <p>Manage premium account listings.</p>
           </Link>
 
+           <Link href="/admin/contacts" className={styles.card}>
+            <h3>Contacts</h3>
+            <p>Manage contact of users.</p>
+          </Link>
+
           <div className={`${styles.card} ${styles.disabled}`}>
             <h3>Settings</h3>
             <p>Coming soon</p>

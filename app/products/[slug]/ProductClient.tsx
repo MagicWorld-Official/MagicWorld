@@ -35,15 +35,15 @@ export default function ProductClient({ product }: { product: Product }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
   const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
-  // Reset message when modal closes
+  // Reset message when modal opens
   useEffect(() => {
-    if (!orderOpen) setMessage(null);
+    if (orderOpen) setMessage(null);
   }, [orderOpen]);
 
-  // Close on Escape key
+  // Close on Escape
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => e.key === "Escape" && setOrderOpen(false);
     if (orderOpen) window.addEventListener("keydown", handleEsc);
@@ -65,25 +65,25 @@ export default function ProductClient({ product }: { product: Product }) {
   };
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) {
+    const f = e.target.files?.[0];
+    if (!f) {
       setFile(null);
       return;
     }
 
-    if (!ACCEPTED_TYPES.includes(file.type)) {
+    if (!ACCEPTED_TYPES.includes(f.type)) {
       setMessage({ type: "error", text: "Only JPG, PNG, or WEBP images are allowed." });
       setFile(null);
       return;
     }
 
-    if (file.size > MAX_FILE_SIZE) {
+    if (f.size > MAX_FILE_SIZE) {
       setMessage({ type: "error", text: "File too large. Maximum size is 5MB." });
       setFile(null);
       return;
     }
 
-    setFile(file);
+    setFile(f);
     setMessage(null);
   };
 
@@ -114,19 +114,18 @@ export default function ProductClient({ product }: { product: Product }) {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "Failed to submit order. Please try again.");
+        throw new Error(err.message || "Failed to submit order");
       }
 
       const data = await res.json();
-
       if (data.success) {
-        setMessage({ type: "success", text: "Order submitted successfully! We'll verify your payment soon." });
+        setMessage({ type: "success", text: "Order submitted! We'll verify your payment soon." });
         setTimeout(closeOrder, 2500);
       } else {
-        setMessage({ type: "error", text: data.message || "Order failed. Please try again." });
+        setMessage({ type: "error", text: data.message || "Order failed" });
       }
     } catch (err: any) {
-      setMessage({ type: "error", text: err.message || "Network error. Check your connection and try again." });
+      setMessage({ type: "error", text: err.message || "Network error. Try again." });
     } finally {
       setLoading(false);
     }
@@ -137,7 +136,7 @@ export default function ProductClient({ product }: { product: Product }) {
       <section className={styles.product}>
         <div className="container">
           <div className={styles.inner}>
-            {/* Image Section */}
+            {/* LEFT - IMAGE */}
             <div className={styles.left}>
               <div className={styles.imageWrap}>
                 {product.image ? (
@@ -148,33 +147,28 @@ export default function ProductClient({ product }: { product: Product }) {
                     sizes="(max-width: 768px) 100vw, 50vw"
                     priority
                     className={styles.image}
-                    unoptimized // ← Fixes all external image errors permanently
+                    unoptimized
                   />
                 ) : (
-                  <div className={styles.imagePlaceholder} />
+                  <div className={styles.placeholder} />
                 )}
               </div>
             </div>
 
-            {/* Info Section */}
+            {/* RIGHT - INFO */}
             <div className={styles.right}>
               {product.statusEnabled && product.statusLabel && (
                 <span className={styles.statusBadge}>{product.statusLabel}</span>
               )}
 
               <h1 className={styles.title}>{product.name}</h1>
+
               {product.desc && <p className={styles.desc}>{product.desc}</p>}
 
               <ul className={styles.meta}>
-                {product.version && (
-                  <li><strong>Version:</strong> {product.version}</li>
-                )}
-                {product.size && (
-                  <li><strong>Size:</strong> {product.size}</li>
-                )}
-                {product.updated && (
-                  <li><strong>Updated:</strong> {product.updated}</li>
-                )}
+                {product.version && <li><strong>Version:</strong> {product.version}</li>}
+                {product.size && <li><strong>Size:</strong> {product.size}</li>}
+                {product.updated && <li><strong>Updated:</strong> {product.updated}</li>}
               </ul>
 
               {product.longDesc && <p className={styles.longDesc}>{product.longDesc}</p>}
@@ -191,18 +185,10 @@ export default function ProductClient({ product }: { product: Product }) {
                   </a>
                 ) : (
                   <>
-                    <button
-                      className={styles.buyBtn}
-                      onClick={() => openOrder("1 Day")}
-                      disabled={loading}
-                    >
+                    <button className={styles.buyBtn} onClick={() => openOrder("1 Day")}>
                       Buy 1 Day – ₹{product.prices?.day ?? "—"}
                     </button>
-                    <button
-                      className={styles.buyBtn}
-                      onClick={() => openOrder("1 Week")}
-                      disabled={loading}
-                    >
+                    <button className={styles.buyBtn} onClick={() => openOrder("1 Week")}>
                       Buy 1 Week – ₹{product.prices?.week ?? "—"}
                     </button>
                   </>
@@ -213,12 +199,10 @@ export default function ProductClient({ product }: { product: Product }) {
         </div>
       </section>
 
-      {/* Features Section */}
-      {product.featuresEnabled && product.featuresData && (
-        <Features data={product.featuresData} />
-      )}
+      {/* FEATURES */}
+      {product.featuresEnabled && product.featuresData && <Features data={product.featuresData} />}
 
-      {/* Order Modal */}
+      {/* ORDER MODAL */}
       {orderOpen && (
         <div className={styles.orderOverlay} onClick={closeOrder}>
           <div className={styles.orderBox} onClick={(e) => e.stopPropagation()}>
@@ -232,21 +216,18 @@ export default function ProductClient({ product }: { product: Product }) {
 
             <div className={styles.payBox}>
               <h3>Payment Instructions</h3>
-              <p>
-                Send payment to UPI ID: <strong>{process.env.NEXT_PUBLIC_UPI_ID || "yodhdhillon02@ybl"}</strong>
-              </p>
+              <p>UPI ID: <strong>{process.env.NEXT_PUBLIC_UPI_ID || "yodhdhillon02@ybl"}</strong></p>
               <p>After payment, upload a clear screenshot below.</p>
             </div>
 
             <div className={styles.orderGroup}>
-              <label>Email Address *</label>
+              <label>Email *</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
                 disabled={loading}
-                required
               />
             </div>
 
@@ -258,7 +239,6 @@ export default function ProductClient({ product }: { product: Product }) {
                 onChange={(e) => setTelegram(e.target.value)}
                 placeholder="@yourusername"
                 disabled={loading}
-                required
               />
             </div>
 
@@ -287,11 +267,7 @@ export default function ProductClient({ product }: { product: Product }) {
               >
                 {loading ? "Submitting..." : "Submit Order"}
               </button>
-              <button
-                className={styles.cancelBtn}
-                onClick={closeOrder}
-                disabled={loading}
-              >
+              <button className={styles.cancelBtn} onClick={closeOrder} disabled={loading}>
                 Cancel
               </button>
             </div>

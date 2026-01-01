@@ -1,7 +1,25 @@
+/* footer.module.css - Premium & Attractive Footer */
+
 .footer {
-  background: #f8fafc;
-  padding: 70px 0 35px;
-  border-top: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
+  padding: 80px 0 40px;
+  border-top: 1px solid rgba(0, 112, 243, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle Pattern */
+.footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(0, 112, 243, 0.08) 10%, transparent 10%);
+  background-size: 50px 50px;
+  opacity: 0.4;
+  animation: subtleMove 30s linear infinite;
 }
 
 /* MAIN GRID */
@@ -10,108 +28,183 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   justify-items: center;
   align-items: flex-start;
-  gap: 60px;
-  margin-bottom: 40px;
+  gap: 70px;
+  margin-bottom: 50px;
+  position: relative;
+  z-index: 1;
 }
 
 /******** BRAND ********/
 .brand {
-  max-width: 280px;
+  max-width: 320px;
   text-align: center;
 }
 
 .brand h3 {
-  font-size: 1.7rem;
-  font-weight: 800;
-  margin-bottom: 12px;
-  color: #1a1a1a;
+  font-size: 2rem;
+  font-weight: 900;
+  margin-bottom: 16px;
+  background: linear-gradient(90deg, #0066ff, #00aaff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: fadeInUp 1s ease both;
 }
 
 .brand p {
-  color: #555;
-  line-height: 1.6;
+  color: #444;
+  line-height: 1.7;
+  font-size: 1.1rem;
+  font-weight: 400;
+  animation: fadeInUp 1.2s ease both;
 }
 
-/******** LINKS ********/
+/******** LINKS & CONTACT ********/
+.links,
+.contact {
+  text-align: left;
+}
+
 .links h4,
 .contact h4 {
-  font-size: 1.15rem;
-  font-weight: 700;
-  margin-bottom: 16px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin-bottom: 20px;
   color: #1a1a1a;
+  position: relative;
+  padding-bottom: 8px;
+  animation: fadeInUp 1s ease both;
+}
+
+.links h4::after,
+.contact h4::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, #0066ff, #00aaff);
+  border-radius: 3px;
 }
 
 .links ul {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-left: 20px;
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.links a {
-  text-decoration: none;
+.links ul li a {
   color: #444;
-  transition: 0.2s ease;
+  text-decoration: none;
+  font-size: 1.1rem;
+  font-weight: 500;
+  transition: color 0.3s ease, transform 0.3s ease;
+  animation: fadeInUp 1.2s ease both;
 }
 
-.links a:hover {
-  color: #0070f3;
-}
-
-.links a:focus-visible,
-.contact a:focus-visible {
-  outline: 2px solid #0070f3;
-  outline-offset: 3px;
-  border-radius: 4px;
-}
-
-/******** CONTACT ********/
-.contact {
-  text-align: center;
+.links ul li a:hover {
+  color: #0066ff;
+  transform: translateX(5px);
 }
 
 .contact p {
-  color: #555;
-  line-height: 1.55;
-  margin: 4px 0;
+  font-size: 1.1rem;
+  color: #444;
+  line-height: 1.7;
+  animation: fadeInUp 1.2s ease both;
 }
+
+.contact a {
+  color: #0066ff;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
 
 /******** BOTTOM BAR ********/
 .bottom {
   text-align: center;
-  padding-top: 20px;
-  border-top: 1px solid #e5e7eb;
-  margin-top: 20px;
-
+  padding-top: 30px;
+  border-top: 1px solid rgba(0, 112, 243, 0.1);
+  margin-top: 40px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
+  animation: fadeInUp 1.4s ease both;
 }
 
 .bottom p {
-  font-size: 0.9rem;
-  color: #555;
+  font-size: 1rem;
+  color: #444;
+  font-weight: 500;
 }
 
 /******** VERSION BADGE ********/
 .versionBadge {
+  width: 60px;
   display: inline-block;
+  padding: 6px 16px;
+  font-size: 0.9rem;
   margin: 0 auto;
-  padding: 5px 12px;
-  font-size: 0.8rem;
   font-weight: 700;
-  color: #fff;
-  background: #111;
-  border-radius: 6px;
-  letter-spacing: 0.4px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  color: white;
+  background: linear-gradient(90deg, #0066ff, #00aaff);
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(0, 112, 243, 0.25);
+  transition: transform 0.3s ease;
+}
+
+.versionBadge:hover {
+  transform: translateY(-2px);
 }
 
 /******** RESPONSIVE ********/
 @media (max-width: 900px) {
   .inner {
     grid-template-columns: 1fr;
-    gap: 35px;
+    gap: 50px;
     text-align: center;
   }
+
+  .brand, .links, .contact {
+    max-width: none;
+    text-align: center;
+  }
+
+  .links h4::after,
+  .contact h4::after {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .links ul {
+    align-items: center;
+  }
+
+  .links ul li a:hover {
+    transform: translateX(0);
+  }
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes subtleMove {
+  from { background-position: 0 0; }
+  to { background-position: 50px 50px; }
 }

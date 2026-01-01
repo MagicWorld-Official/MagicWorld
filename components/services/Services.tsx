@@ -20,14 +20,9 @@ export default function Services() {
         </header>
 
         <div className={styles.grid}>
-          {/* Utilities (Coming Soon) */}
-          <article
-            className={`${styles.card} ${styles.comingSoon}`}
-            aria-disabled="true"
-          >
-            <div className={styles.icon} aria-hidden="true">
-              ⚡
-            </div>
+          {/* Enhanced Utilities */}
+          <article className={styles.card}>
+            <div className={styles.icon}>⚡</div>
             <h3>Enhanced Utilities</h3>
             <p>
               Refined digital tools crafted to streamline workflows and
@@ -38,11 +33,9 @@ export default function Services() {
             </Link>
           </article>
 
-          {/* Premium Accounts (Active) */}
+          {/* Premium Accounts */}
           <article className={styles.card}>
-            <div className={styles.icon} aria-hidden="true">
-              👤
-            </div>
+            <div className={styles.icon}>👤</div>
             <h3>Premium Accounts</h3>
             <p>
               Access a selection of verified, high-quality accounts suitable

@@ -90,11 +90,12 @@ export default function CategoryClient({ products }: Props) {
           </p>
         ) : (
           <div className={styles.grid}>
-            {visibleProducts.map((item) => (
+            {visibleProducts.map((item, index) => (
               <Link
                 key={item._id}
                 href={`/products/${item.slug}`}
                 className={styles.card}
+                style={{ animationDelay: `${index * 0.1}s` }} // Staggered animation
               >
                 <div className={styles.bgWrap}>
                   <Image

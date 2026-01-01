@@ -1,123 +1,317 @@
+/* contact.module.css - Modern & Premium Contact Page */
+
 .contact {
-  padding: 60px 0;
-  background: #ffffff;
+  padding: 100px 0;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+  min-height: 100vh;
 }
 
 .inner {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 60px;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 80px;
+  align-items: start;
 }
 
-/******** LEFT SIDE ********/
+/* LEFT SIDE - INFO */
 .left {
-  max-width: 520px;
+  max-width: 560px;
 }
 
 .title {
-  font-size: 2.6rem;
-  font-weight: 800;
-  margin-bottom: 16px;
-  color: #1a1a1a;
+  font-size: 3.2rem;
+  font-weight: 900;
+  background: linear-gradient(90deg, #0070f3, #00aaff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 20px;
+  line-height: 1.1;
 }
 
 .subtitle {
-  font-size: 1.1rem;
-  color: #555;
-  margin-bottom: 30px;
-  line-height: 1.6;
+  font-size: 1.25rem;
+  color: #444;
+  margin-bottom: 40px;
+  line-height: 1.7;
+  font-weight: 400;
 }
 
 .infoList {
   list-style: none;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  font-size: 1rem;
-  color: #444;
+  gap: 20px;
 }
 
-/******** RIGHT SIDE (FORM) ********/
+.infoList li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.infoList li::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  background: #0070f3;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.infoList a {
+  color: #0070f3;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.infoList a:hover {
+  color: #005cc0;
+  text-decoration: underline;
+}
+
+/* RIGHT SIDE - FORM */
+.right {
+  position: relative;
+}
+
 .form {
   background: #ffffff;
-  padding: 32px;
-  border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.06);
-  border: 1px solid #f2f2f2;
+  padding: 40px;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8f0fe;
+  backdrop-filter: blur(10px);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.form:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 30px 80px rgba(0, 112, 243, 0.15);
 }
 
 .field {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  position: relative;
 }
 
 .field label {
+  display: block;
   font-weight: 600;
-  margin-bottom: 6px;
-  color: #222;
+  margin-bottom: 8px;
+  color: #1a1a1a;
+  font-size: 1.05rem;
+  transition: color 0.3s ease;
 }
 
 .field input,
 .field textarea {
   width: 100%;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  background: #fff;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 2px solid #e0e6ed;
+  background: #fafbff;
   font-size: 1rem;
-  transition: 0.25s ease;
+  color: #222;
+  transition: all 0.3s ease;
+  font-family: inherit;
 }
 
 .field input:focus,
 .field textarea:focus {
+  outline: none;
   border-color: #0070f3;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(0, 112, 243, 0.15);
 }
 
 .field textarea {
-  height: 140px;
-  resize: none;
+  min-height: 160px;
+  resize: vertical;
 }
 
 .btn {
   width: 100%;
-  background: #0070f3;
-  color: #fff;
-  padding: 14px;
-  font-size: 1rem;
-  border-radius: 10px;
+  background: linear-gradient(90deg, #0070f3, #00aaff);
+  color: white;
+  padding: 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-radius: 14px;
   border: none;
   cursor: pointer;
-  font-weight: 600;
-  transition: 0.25s ease;
+  margin-top: 10px;
+  transition: all 0.4s ease;
+  box-shadow: 0 8px 25px rgba(0, 112, 243, 0.3);
 }
 
 .btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(0, 112, 243, 0.4);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* SUCCESS / ERROR MESSAGES (from JSX) */
+.successMsg {
+  background: #e6f7ed;
+  color: #0d7d3b;
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+  margin-top: 20px;
+  border: 1px solid #a8e6c2;
+  font-weight: 500;
+}
+
+.errorMsg {
+  background: #fde8e8;
+  color: #c53030;
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+  margin-top: 20px;
+  border: 1px solid #fababa;
+  font-weight: 500;
+}
+
+/* MODAL POPUP FOR STATUS */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeIn 0.4s ease;
+}
+
+.modal {
+  background: white;
+  padding: 40px;
+  border-radius: 24px;
+  text-align: center;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
+  animation: slideUp 0.5s ease;
+}
+
+.successIcon,
+.errorIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  font-weight: bold;
+}
+
+.successIcon {
+  background: #d4edda;
+  color: #155724;
+}
+
+.errorIcon {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.modal h2 {
+  font-size: 1.8rem;
+  margin-bottom: 12px;
+  color: #1a1a1a;
+}
+
+.modal p {
+  color: #555;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+.closeButton {
+  background: #0070f3;
+  color: white;
+  padding: 12px 32px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.closeButton:hover {
   background: #005cc0;
 }
 
-.field input:focus-visible,
-.field textarea:focus-visible,
-.btn:focus-visible {
-  outline: 2px solid #0070f3;
-  outline-offset: 3px;
+/* ANIMATIONS */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-/******** RESPONSIVE ********/
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* RESPONSIVE */
 @media (max-width: 900px) {
-  .inner {
-    grid-template-columns: 1fr;
-    gap: 40px;
+  .contact {
+    padding: 80px 0;
   }
 
-  .left,
-  .subtitle,
-  .infoList {
+  .inner {
+    grid-template-columns: 1fr;
+    gap: 60px;
     text-align: center;
   }
 
+  .left {
+    max-width: none;
+  }
+
+  .infoList {
+    align-items: center;
+  }
+
+  .infoList li {
+    justify-content: center;
+  }
+
   .form {
+    padding: 32px 24px;
     margin: 0 auto;
     max-width: 500px;
+  }
+
+  .title {
+    font-size: 2.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 2.4rem;
+  }
+
+  .form {
+    padding: 28px 20px;
   }
 }

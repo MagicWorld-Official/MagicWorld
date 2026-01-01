@@ -1,6 +1,22 @@
 .why {
-  padding: 70px 0;
-  background: #ffffff;
+  padding: 100px 0;
+  background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle Background Pattern */
+.why::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(0, 112, 243, 0.1) 10%, transparent 10%);
+  background-size: 50px 50px;
+  opacity: 0.3;
+  animation: subtleMove 30s linear infinite;
 }
 
 /* GRID LAYOUT */
@@ -8,49 +24,63 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   align-items: center;
-  justify-items: center;
   gap: 80px;
 }
 
 /******** LEFT SIDE ********/
 .left {
-  max-width: 520px;
+  max-width: 560px;
 }
 
 .title {
-  font-size: 2.5rem;
-  font-weight: 800;
+  font-size: 3rem;
+  font-weight: 900;
   color: #1a1a1a;
-  margin-bottom: 14px;
+  margin-bottom: 20px;
+  background: linear-gradient(90deg, #0066ff, #00aaff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .subtitle {
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   color: #444;
-  margin-bottom: 32px;
+  margin-bottom: 40px;
+  line-height: 1.7;
 }
 
 .list {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  font-size: 1.05rem;
+  gap: 24px;
+  font-size: 1.15rem;
+  color: #333;
 }
 
 .list li {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  color: #333;
-  line-height: 1.55;
+  gap: 16px;
+  line-height: 1.6;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 112, 243, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.list li:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 112, 243, 0.15);
 }
 
 .bullet {
-  color: #0070f3;
-  font-size: 1.5rem;
-  font-weight: bold;
-  line-height: 1;
+  font-size: 1.6rem;
+  color: #0066ff;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 /******** RIGHT SIDE ********/
@@ -61,32 +91,52 @@
 
 .box {
   position: relative;
-  width: 400px;        /* ⬅️ increased from 340 */
-  height: 380px;       /* ⬅️ increased from 340 */
-  border-radius: 26px;
+  width: 420px;
+  height: 420px;
+  border-radius: 28px;
   overflow: hidden;
-  background: linear-gradient(135deg, #eaf3ff, #ffffff);
-  box-shadow: 0 20px 45px rgba(0,0,0,0.09);
-  animation: floatBox 5s ease-in-out infinite;
+  box-shadow: 0 20px 50px rgba(0, 112, 243, 0.2);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  animation: float 5s ease-in-out infinite;
+}
+
+.box:hover {
+  transform: scale(1.05) translateY(-10px);
+  box-shadow: 0 30px 70px rgba(0, 112, 243, 0.3);
 }
 
 .boxImage {
   object-fit: cover;
-  transition: transform 0.4s ease;
+  transition: transform 0.5s ease;
 }
 
 .box:hover .boxImage {
-  transform: scale(1.04);
+  transform: scale(1.1);
 }
 
-/* Floating animation */
-@keyframes floatBox {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes subtleMove {
+  from { background-position: 0 0; }
+  to { background-position: 50px 50px; }
 }
 
 /******** RESPONSIVE ********/
+@media (max-width: 1024px) {
+  .inner {
+    gap: 60px;
+  }
+
+  .box {
+    width: 360px;
+    height: 360px;
+  }
+}
+
 @media (max-width: 900px) {
   .inner {
     grid-template-columns: 1fr;
@@ -94,8 +144,37 @@
     gap: 50px;
   }
 
+  .left {
+    max-width: none;
+  }
+
   .list li {
     justify-content: center;
+    text-align: center;
+  }
+
+  .subtitle {
+    margin: 0 auto;
+  }
+
+  .box {
+    width: 320px;
+    height: 320px;
+  }
+}
+
+@media (max-width: 500px) {
+  .title {
+    font-size: 2.6rem;
+  }
+
+  .subtitle {
+    font-size: 1.15rem;
+  }
+
+  .list li {
+    padding: 12px;
+    font-size: 1.05rem;
   }
 
   .box {
@@ -104,36 +183,9 @@
   }
 }
 
-@media (max-width: 500px) {
-  .title {
-    font-size: 2rem;
-  }
-
-  .box {
-    width: 220px;
-    height: 220px;
-  }
-}
-@media (max-width: 900px) {
-  .box {
-    width: 320px;      /* ⬅️ increased */
-    height: 320px;
-  }
-}
-
-@media (max-width: 500px) {
-  .box {
-    width: 240px;      /* ⬅️ slightly larger */
-    height: 240px;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .box {
-    animation: none;
-  }
-
-  .boxImage {
+  .box, .list li {
     transition: none;
+    animation: none;
   }
 }
