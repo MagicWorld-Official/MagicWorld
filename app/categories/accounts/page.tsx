@@ -1,3 +1,4 @@
+// app/categories/accounts/page.tsx
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./accounts.module.css";
@@ -28,67 +29,52 @@ async function getAccounts(): Promise<AccountItem[]> {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/premium-accounts`,
       {
-        // ISR for prod, fresh enough
         next: { revalidate: 60 },
         headers: {
-          Accept: "application/json",
+          "Cache-Control": "public, max-age=60, s-maxage=60",
         },
       }
     );
 
-    if (!res.ok) return [];
+    if (!res.ok) {
+      return [];
+    }
 
     const data = await res.json();
-
-    // backend may return:
-    // [] OR { success, data } OR { success, accounts }
-    if (Array.isArray(data)) return data;
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data?.accounts)) return data.accounts;
-
-    return [];
-  } catch {
-    // silent fail in prod
+    return Array.isArray(data) ? data : data.accounts || [];
+  } catch (err) {
+    console.error("Fetch accounts error:", err);
     return [];
   }
 }
 
-/* ===============================
-   PAGE
-================================ */
-export default async function PremiumAccountsPage() {
+export default async function AccountsPage() {
   const accounts = await getAccounts();
+  const hasAccounts = accounts.length > 0;
 
   return (
     <section className={styles.wrapper}>
       <div className="container">
         <header className={styles.header}>
-          <h1>Premium Accounts</h1>
-          <p>
-            Explore a curated list of verified premium accounts available for
-            personal and professional use.
+          <h1 className={styles.title}>Premium Accounts</h1>
+          <p className={styles.subtitle}>
+            Access verified, high-quality premium accounts for entertainment, productivity, and gaming needs.
           </p>
         </header>
 
-        {accounts.length === 0 ? (
-          <p style={{ textAlign: "center", color: "#777" }}>
-            No premium accounts available at the moment.
-          </p>
-        ) : (
-          <div
-            className={`${styles.grid} ${
-              accounts.length === 1 ? styles.singleGrid : ""
-            }`}
-          >
-            {accounts.map((item) => (
-              <article key={item.slug} className={styles.card}>
-                <div className={styles.imageWrapper}>
+        {hasAccounts ? (
+          <div className={`${styles.grid} ${accounts.length === 1 ? styles.singleGrid : ""}`}>
+            {accounts.map((item, index) => (
+              <article key={item.slug} className={styles.card} style={{ animationDelay: `${index * 0.1}s` }}>
+                <div className={styles.imageWrap}>
                   <Image
                     src={item.img}
                     alt={item.title}
                     fill
-                    sizes="(max-width: 768px) 100vw, 300px"
                     className={styles.image}
+                    sizes="(max-width: 768px) 100vw, 300px"
+                    priority={index < 3}
+                    unoptimized
                   />
                 </div>
 
@@ -106,15 +92,19 @@ export default async function PremiumAccountsPage() {
 
                 <p className={styles.desc}>{item.desc}</p>
 
-                <Link
-                  href={`/categories/accounts/${item.slug}`}
-                  className={styles.btn}
-                >
-                  View Details
-                </Link>
+                <div className={styles.btnWrapper}>
+                  <Link
+                    href={`/categories/accounts/${item.slug}`}
+                    className={styles.btn}
+                  >
+                    View Details
+                  </Link>
+                </div>
               </article>
             ))}
           </div>
+        ) : (
+          <p className={styles.empty}>No premium accounts available at the moment. Check back soon!</p>
         )}
       </div>
     </section>

@@ -32,36 +32,28 @@ export default function Features({ data }: { data: FeaturesData }) {
         </header>
 
         {/* Tabs */}
-        <div className={styles.tabs} role="tablist">
+        <div className={styles.tabs}>
           {tabs.map((tab) => (
             <button
               key={tab}
-              role="tab"
-              aria-selected={activeTab === tab}
-              className={`${styles.tab} ${
-                activeTab === tab ? styles.activeTab : ""
-              }`}
-              onClick={() => {
-                setActiveTab(tab);
-                setOpenIndex(0);
-              }}
+              className={`${styles.tab} ${activeTab === tab ? styles.activeTab : ""}`}
+              onClick={() => setActiveTab(tab)}
             >
               {tab}
             </button>
           ))}
         </div>
 
-        {/* Accordions */}
-        <div className={styles.accordionWrap}>
-          {data[activeTab]?.length === 0 && (
-            <p className={styles.empty}>No features available.</p>
-          )}
-
-          {data[activeTab]?.map((section, index) => {
+        {/* Content */}
+        <div className={styles.content}>
+          {data[activeTab].map((section, index) => {
             const open = openIndex === index;
 
             return (
-              <div key={index} className={styles.accordion}>
+              <div
+                key={index}
+                className={`${styles.accordion} ${open ? styles.activeAccordion : ""}`}
+              >
                 <button
                   className={`${styles.accordionHeader} ${
                     open ? styles.openHeader : ""

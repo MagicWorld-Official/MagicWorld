@@ -1,7 +1,7 @@
 /* category.module.css - Premium & Modern Category UI */
 
 .category {
-  padding: 100px 0;
+  padding: 40px 0;
   background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
   position: relative;
   overflow: hidden;
@@ -98,7 +98,6 @@
 
 /* CARD */
 .card {
-  width: 400px;
   position: relative;
   height: 320px;
   border-radius: 28px;

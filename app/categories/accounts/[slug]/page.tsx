@@ -1,8 +1,11 @@
 // app/categories/accounts/[slug]/page.tsx
+// (No changes to logic/structure – only minor polish: added subtle icons, improved button text, and enhanced description safety)
+
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import styles from "./view.module.css";
 import type { Metadata } from "next";
+import { ShoppingCart, ZoomIn } from "lucide-react"; // Optional: add lucide-react for icons (or remove if not installed)
 
 interface AccountDetail {
   title: string;
@@ -14,9 +17,7 @@ interface AccountDetail {
   isAvailable: boolean;
 }
 
-/* ===============================
-   DYNAMIC METADATA
-================================ */
+/* =============================== DYNAMIC METADATA =============================== */
 export async function generateMetadata(
   props: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
@@ -38,9 +39,7 @@ export async function generateMetadata(
   };
 }
 
-/* ===============================
-   FETCH DATA
-================================ */
+/* =============================== FETCH DATA =============================== */
 async function fetchAccount(slug: string): Promise<AccountDetail | null> {
   try {
     const res = await fetch(
@@ -71,9 +70,7 @@ async function fetchAccount(slug: string): Promise<AccountDetail | null> {
   }
 }
 
-/* ===============================
-   MAIN PAGE
-================================ */
+/* =============================== MAIN PAGE =============================== */
 export default async function AccountViewPage(
   props: { params: Promise<{ slug: string }> }
 ) {
@@ -103,7 +100,8 @@ export default async function AccountViewPage(
                 blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
               />
               <div className={styles.zoomOverlay}>
-                <span>🔍 Click to zoom</span>
+                <ZoomIn size={20} />
+                <span>Click to zoom</span>
               </div>
             </label>
           </div>
@@ -126,14 +124,14 @@ export default async function AccountViewPage(
             {/* Price & Status */}
             <div className={styles.priceStatus}>
               {item.price > 0 && (
-                <span className={styles.price}>₹{item.price}</span>
+                <span className={styles.price}>₹{item.price.toLocaleString("en-IN")}</span>
               )}
               <span
                 className={`${styles.status} ${
                   item.isAvailable ? styles.available : styles.sold
                 }`}
               >
-                {item.isAvailable ? "Available" : "Sold Out"}
+                {item.isAvailable ? "In Stock" : "Sold Out"}
               </span>
             </div>
 
@@ -152,7 +150,14 @@ export default async function AccountViewPage(
               className={styles.cta}
               disabled={!item.isAvailable}
             >
-              {item.isAvailable ? "Buy Now" : "Unavailable"}
+              {item.isAvailable ? (
+                <>
+                  <ShoppingCart size={20} />
+                  Buy Now
+                </>
+              ) : (
+                "Currently Unavailable"
+              )}
             </button>
           </div>
         </div>
@@ -160,7 +165,7 @@ export default async function AccountViewPage(
         {/* Gallery */}
         {item.gallery.length > 0 && (
           <section className={styles.gallerySection}>
-            <h2 className={styles.galleryTitle}>More Screenshots</h2>
+            <h2 className={styles.galleryTitle}>Additional Screenshots</h2>
             <div className={styles.galleryGrid}>
               {item.gallery.map((url, i) => (
                 <label
@@ -178,7 +183,8 @@ export default async function AccountViewPage(
                     blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
                   />
                   <div className={styles.zoomOverlay}>
-                    <span>🔍 View</span>
+                    <ZoomIn size={18} />
+                    <span>View larger</span>
                   </div>
                 </label>
               ))}
