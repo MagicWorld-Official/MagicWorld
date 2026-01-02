@@ -336,6 +336,124 @@
   transform: scale(1.15);
 }
 
+/* view.module.css – Updated with Buy Modal Styling */
+
+/* ... Keep all existing styles ... */
+
+/* Buy Modal Overlay */
+.buyModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Buy Modal Box */
+.buyModalBox {
+  background: white;
+  padding: 40px;
+  border-radius: 24px;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+  position: relative;
+  animation: zoomIn 0.3s ease;
+}
+
+/* Buy Modal Title */
+.buyModalTitle {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 20px;
+  color: #111;
+}
+
+/* Buy Modal Description */
+.buyModalDesc {
+  font-size: 1.15rem;
+  color: #444;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+/* Buy Modal Button (Telegram) */
+.buyModalButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 32px;
+  background: linear-gradient(135deg, #0088cc, #00aaff); /* Telegram blue */
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-radius: 16px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(0, 136, 204, 0.3);
+}
+
+.buyModalButton:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 136, 204, 0.4);
+  background: linear-gradient(135deg, #0077bb, #0099ee);
+}
+
+/* Buy Modal Close Button */
+.buyModalClose {
+  margin-top: 20px;
+  padding: 12px 28px;
+  background: #f1f5f9;
+  color: #444;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.buyModalClose:hover {
+  background: #e2e8f0;
+  transform: translateY(-2px);
+}
+
+/* Animations for Modal */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes zoomIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Responsive for Buy Modal */
+@media (max-width: 600px) {
+  .buyModalBox {
+    padding: 30px 20px;
+  }
+
+  .buyModalTitle {
+    font-size: 1.8rem;
+  }
+
+  .buyModalDesc {
+    font-size: 1.05rem;
+  }
+
+  .buyModalButton {
+    padding: 14px 28px;
+    font-size: 1rem;
+  }
+}
+
 /* Animation */
 @keyframes subtleMove {
   from {

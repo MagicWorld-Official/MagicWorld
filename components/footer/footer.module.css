@@ -164,6 +164,72 @@
   transform: translateY(-2px);
 }
 
+/* footer.module.css - Updated with Telegram Icon Styling */
+
+/* ... Keep all your existing styles ... */
+
+/* Telegram Social Link */
+.social {
+  margin-top: 20px;
+  animation: fadeInUp 1.4s ease both;
+}
+
+.telegramLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: #40B3E0;
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(64, 179, 224, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.telegramLink:hover {
+  color: #ffffff;
+  background: #40B3E0;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(64, 179, 224, 0.3);
+}
+
+.telegramLink span {
+  transition: color 0.3s ease;
+}
+
+.telegramLink:hover span {
+  color: white;
+}
+
+.telegramIcon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.telegramLink:hover .telegramIcon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Responsive Adjustment */
+@media (max-width: 900px) {
+  .contact {
+    text-align: center;
+  }
+
+  .social {
+    justify-content: center;
+  }
+
+  .telegramLink {
+    justify-content: center;
+  }
+}
+
 /******** RESPONSIVE ********/
 @media (max-width: 900px) {
   .inner {

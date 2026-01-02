@@ -85,7 +85,9 @@ export default function PremiumAccountsList() {
     if (!confirm("Permanently delete this premium account?")) return;
 
     try {
-      const res = await apiFetch(`/premium-accounts/${id}`, { method: "DELETE" });
+      const res = await apiFetch(`/premium-accounts/admin/${id}`, {
+        method: "DELETE",
+      });
       if (!res) return;
 
       if (!res.ok) throw new Error("Delete failed");

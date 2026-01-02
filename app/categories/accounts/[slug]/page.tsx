@@ -1,11 +1,7 @@
 // app/categories/accounts/[slug]/page.tsx
-// (No changes to logic/structure – only minor polish: added subtle icons, improved button text, and enhanced description safety)
-
-import Image from "next/image";
 import { notFound } from "next/navigation";
-import styles from "./view.module.css";
+import ClientView from "./ClientView";
 import type { Metadata } from "next";
-import { ShoppingCart, ZoomIn } from "lucide-react"; // Optional: add lucide-react for icons (or remove if not installed)
 
 interface AccountDetail {
   title: string;
@@ -70,7 +66,7 @@ async function fetchAccount(slug: string): Promise<AccountDetail | null> {
   }
 }
 
-/* =============================== MAIN PAGE =============================== */
+/* =============================== PAGE =============================== */
 export default async function AccountViewPage(
   props: { params: Promise<{ slug: string }> }
 ) {
@@ -79,153 +75,5 @@ export default async function AccountViewPage(
 
   if (!item) notFound();
 
-  const safeMainImg = item.img || "/placeholder.jpg";
-
-  return (
-    <section className={styles.wrapper}>
-      <div className="container">
-        {/* Main Layout */}
-        <div className={styles.layout}>
-          {/* Main Image */}
-          <div className={styles.mainImageWrapper}>
-            <label htmlFor="main-modal" className={styles.mainImageLabel}>
-              <Image
-                src={safeMainImg}
-                alt={item.title}
-                fill
-                priority
-                sizes="(max-width: 900px) 100vw, 600px"
-                className={styles.mainImage}
-                placeholder="blur"
-                blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-              />
-              <div className={styles.zoomOverlay}>
-                <ZoomIn size={20} />
-                <span>Click to zoom</span>
-              </div>
-            </label>
-          </div>
-
-          {/* Content */}
-          <div className={styles.content}>
-            <h1 className={styles.title}>{item.title}</h1>
-
-            {/* Badges */}
-            {item.badges.length > 0 && (
-              <div className={styles.badges}>
-                {item.badges.map((badge) => (
-                  <span key={badge} className={styles.badge}>
-                    {badge}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Price & Status */}
-            <div className={styles.priceStatus}>
-              {item.price > 0 && (
-                <span className={styles.price}>₹{item.price.toLocaleString("en-IN")}</span>
-              )}
-              <span
-                className={`${styles.status} ${
-                  item.isAvailable ? styles.available : styles.sold
-                }`}
-              >
-                {item.isAvailable ? "In Stock" : "Sold Out"}
-              </span>
-            </div>
-
-            {/* Description */}
-            <div
-              className={styles.description}
-              dangerouslySetInnerHTML={{
-                __html: item.desc
-                  .replace(/\n/g, "<br>")
-                  .replace(/\*(.*?)\*/g, "<strong>$1</strong>"),
-              }}
-            />
-
-            {/* CTA */}
-            <button
-              className={styles.cta}
-              disabled={!item.isAvailable}
-            >
-              {item.isAvailable ? (
-                <>
-                  <ShoppingCart size={20} />
-                  Buy Now
-                </>
-              ) : (
-                "Currently Unavailable"
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Gallery */}
-        {item.gallery.length > 0 && (
-          <section className={styles.gallerySection}>
-            <h2 className={styles.galleryTitle}>Additional Screenshots</h2>
-            <div className={styles.galleryGrid}>
-              {item.gallery.map((url, i) => (
-                <label
-                  key={i}
-                  htmlFor={`gallery-${i}`}
-                  className={styles.galleryItem}
-                >
-                  <Image
-                    src={url || "/placeholder.jpg"}
-                    alt={`${item.title} screenshot ${i + 1}`}
-                    fill
-                    sizes="(max-width: 768px) 50vw, 25vw"
-                    className={styles.galleryImage}
-                    placeholder="blur"
-                    blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-                  />
-                  <div className={styles.zoomOverlay}>
-                    <ZoomIn size={18} />
-                    <span>View larger</span>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </section>
-        )}
-      </div>
-
-      {/* Main Image Modal */}
-      <input type="checkbox" id="main-modal" className={styles.modalToggle} />
-      <div className={styles.modal}>
-        <label htmlFor="main-modal" className={styles.backdrop} />
-        <div className={styles.modalBox}>
-          <label htmlFor="main-modal" className={styles.close}>×</label>
-          <Image
-            src={safeMainImg}
-            alt={item.title}
-            fill
-            className={styles.modalImg}
-          />
-        </div>
-      </div>
-
-      {/* Gallery Modals */}
-      {item.gallery.map((url, i) => (
-        <div key={i}>
-          <input type="checkbox" id={`gallery-${i}`} className={styles.modalToggle} />
-          <div className={styles.modal}>
-            <label htmlFor={`gallery-${i}`} className={styles.backdrop} />
-            <div className={styles.modalBox}>
-              <label htmlFor={`gallery-${i}`} className={styles.close}>×</label>
-              <Image
-                src={url || "/placeholder.jpg"}
-                alt={`${item.title} screenshot ${i + 1}`}
-                fill
-                className={styles.modalImg}
-              />
-            </div>
-          </div>
-        </div>
-      ))}
-    </section>
-  );
+  return <ClientView item={item} />;
 }
