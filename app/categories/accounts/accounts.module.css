@@ -1,11 +1,12 @@
-/* accounts.module.css - Premium & Modern Premium Accounts Page */
+/* accounts.module.css - Improved & Polished Version */
 
 /* Wrapper */
 .wrapper {
-  padding: 40px 0;
-  background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
+  padding: 30px 0;
+  background: linear-gradient(135deg, #f9fcff 0%, #eff5ff 100%);
   position: relative;
   overflow: hidden;
+  min-height: 100vh;
 }
 
 /* Subtle Background Pattern */
@@ -16,69 +17,135 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(0, 112, 243, 0.1) 10%, transparent 10%);
-  background-size: 50px 50px;
-  opacity: 0.3;
-  animation: subtleMove 30s linear infinite;
+  background: radial-gradient(circle, rgba(0, 112, 243, 0.08) 10%, transparent 10%);
+  background-size: 60px 60px;
+  opacity: 0.25;
+  animation: subtleMove 40s linear infinite;
 }
 
 /* Header */
 .header {
   text-align: center;
-  margin-bottom: 70px;
+  margin-bottom: 80px;
   position: relative;
   z-index: 1;
   animation: fadeInUp 1s ease both;
 }
 
 .title {
-  font-size: 3.4rem;
+  font-size: 3.6rem;
   font-weight: 900;
-  margin-bottom: 16px;
-  background: linear-gradient(90deg, #0066ff, #00aaff);
+  margin-bottom: 18px;
+  background: linear-gradient(90deg, #0055ff, #00bbff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  letter-spacing: -0.5px;
 }
 
 .subtitle {
-  font-size: 1.3rem;
-  color: #444;
-  max-width: 800px;
+  font-size: 1.35rem;
+  color: #333;
+  max-width: 850px;
   margin: 0 auto;
-  line-height: 1.7;
+  line-height: 1.75;
   font-weight: 400;
+}
+
+/* Filter Bar */
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: center;
+  margin: 40px 0 70px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  max-width: 950px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.searchWrapper,
+.filterWrapper {
+  position: relative;
+  flex: 1;
+  min-width: 300px;
+}
+
+.searchIcon,
+.filterIcon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #555;
+  pointer-events: none;
+}
+
+.searchInput,
+.filterSelect {
+  width: 100%;
+  padding: 16px 20px 16px 52px;
+  border: 2px solid #d9e4ff;
+  border-radius: 20px;
+  font-size: 1.15rem;
+  background: white;
+  transition: all 0.35s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.searchInput:focus,
+.filterSelect:focus {
+  outline: none;
+  border-color: #0055ff;
+  box-shadow: 0 0 0 4px rgba(0, 85, 255, 0.15);
+}
+
+.filterSelect {
+  appearance: none;
+  cursor: pointer;
 }
 
 /* Grid Layout */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 40px;
-  max-width: 1200px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 48px;
+  max-width: 1300px;
   margin: 0 auto;
 }
 
-/* When only ONE card exists - centered & not full width */
 .singleGrid {
   grid-template-columns: 1fr;
   justify-items: center;
-  max-width: 420px;
+  max-width: 450px;
   margin: 0 auto;
 }
 
 /* CARD */
 .card {
   background: white;
-  padding: 28px;
-  border-radius: 24px;
-  border: 1px solid #e8f1ff;
-  box-shadow: 0 15px 40px rgba(0, 112, 243, 0.08);
+  padding: 32px;
+  border-radius: 28px;
+  border: 1px solid #e6f0ff;
+  box-shadow: 0 18px 45px rgba(0, 112, 243, 0.1);
   transition: all 0.4s ease;
   position: relative;
   overflow: hidden;
   animation: fadeInUp 1s ease both;
-  user-select: none; /* ← FIX: Prevents text selection on double-click */
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+}
+
+.card:hover {
+  transform: translateY(-12px);
+  box-shadow: 0 30px 65px rgba(0, 112, 243, 0.2);
+  border-color: #b8dcff;
 }
 
 .card::before {
@@ -88,7 +155,7 @@
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(0, 112, 243, 0.1), transparent);
+  background: radial-gradient(circle, rgba(0, 112, 243, 0.12), transparent);
   opacity: 0;
   transition: opacity 0.5s ease;
 }
@@ -97,64 +164,140 @@
   opacity: 1;
 }
 
-.card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 25px 60px rgba(0, 112, 243, 0.18);
-  border-color: #c3dfff;
-}
-
 /* Image Wrap */
 .imageWrap {
   position: relative;
   width: 100%;
-  height: 220px;
-  border-radius: 16px;
+  height: 240px;
+  border-radius: 20px;
   overflow: hidden;
-  margin-bottom: 24px;
-  box-shadow: 0 8px 20px rgba(0, 112, 243, 0.1);
+  margin-bottom: 28px;
+  box-shadow: 0 10px 25px rgba(0, 112, 243, 0.12);
   transition: transform 0.4s ease;
+}
+
+.card:hover .imageWrap {
+  transform: scale(1.02);
 }
 
 .image {
   object-fit: cover;
-  transition: transform 0.5s ease;
+  transition: transform 0.6s ease;
+}
+
+.card:hover .image {
+  transform: scale(1.08);
+}
+
+/* Sold Out Overlay */
+.soldOverlay {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: rgba(220, 38, 38, 0.95);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+}
+
+/* Card Content */
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
 
 /* Title */
 .cardTitle {
-  font-size: 1.8rem;
+  font-size: 1.9rem;
   font-weight: 800;
-  color: #1a1a1a;
-  margin-bottom: 16px;
+  color: #111;
+  margin-bottom: 18px;
+  letter-spacing: -0.3px;
 }
 
 /* Badge Row */
 .badgeRow {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
   flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
 }
 
 .badge {
   background: linear-gradient(135deg, #0066ff, #00aaff);
   color: white;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 0.9rem;
+  padding: 8px 16px;
+  border-radius: 24px;
+  font-size: 0.95rem;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0, 112, 243, 0.2);
+  box-shadow: 0 5px 15px rgba(0, 112, 243, 0.25);
+  transition: transform 0.3s ease;
 }
 
-/* Description */
+/* accounts.module.css - With Improved Price Badge (Matching Screenshot Style) */
+
+/* ... Keep all previous styles unchanged up to .priceBadge ... */
+
+/* Price Badge - Now matches the screenshot: Orange background, white text, rounded pill */
+.priceBadge {
+  background: #ff6d00; /* Vibrant orange like in screenshot */
+  color: white !important; /* White text for high contrast */
+  padding: 8px 18px;
+  border-radius: 50px; /* Full pill shape */
+  font-size: 1rem;
+  font-weight: 700;
+  box-shadow: 0 5px 15px rgba(255, 109, 0, 0.3);
+  transition: transform 0.3s ease;
+  min-width: 80px;
+  text-align: center;
+}
+
+.priceBadge:hover {
+  transform: scale(1.08);
+}
+
+/* Optional: Slightly different shade if you want gradient like type badge */
+ /* background: linear-gradient(135deg, #ff6d00, #ff8a00); */
+
+/* Rest of the styles remain the same as previous polished version */
+
+.badge:hover {
+  transform: scale(1.05);
+}
+
+.socialBadge {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+}
+
+.gameBadge {
+  background: linear-gradient(135deg, #059669, #10b981);
+}
+
+.priceBadge {
+  background: linear-gradient(135deg, #ea580c, #f97316);
+  color: #431407;
+}
+
+/* Description - Shortened with Clamp */
 .desc {
   color: #444;
-  line-height: 1.7;
-  font-size: 1.1rem;
-  margin-bottom: 28px;
+  line-height: 1.75;
+  font-size: 1.15rem;
+  margin-bottom: 32px;
+  flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* Limit to 3 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Button Wrapper - prevents parent card from interfering */
+/* Button Wrapper */
 .btnWrapper {
   margin-top: auto;
   text-align: center;
@@ -163,51 +306,117 @@
 /* Button */
 .btn {
   display: inline-block;
-  padding: 12px 28px;
-  background: linear-gradient(90deg, #0066ff, #00aaff);
+  padding: 14px 32px;
+  background: linear-gradient(90deg, #0055ff, #00bbff);
   color: #fff;
   font-weight: 700;
-  font-size: 1rem;
-  border-radius: 12px;
+  font-size: 1.05rem;
+  border-radius: 14px;
   cursor: pointer;
   transition: all 0.4s ease;
   text-decoration: none;
-  box-shadow: 0 6px 18px rgba(0, 112, 243, 0.25);
-  pointer-events: auto; /* ← Ensures button is always clickable */
+  box-shadow: 0 8px 20px rgba(0, 112, 243, 0.3);
+  pointer-events: auto;
   z-index: 2;
   position: relative;
 }
 
 .btn:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 25px rgba(0, 112, 243, 0.35);
-  background: linear-gradient(90deg, #0055dd, #0099ee);
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0, 112, 243, 0.4);
+  background: linear-gradient(90deg, #0044dd, #00aaff);
+}
+
+.btnDisabled {
+  background: linear-gradient(90deg, #94a3b8, #cbd5e1) !important;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btnDisabled:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 /* Empty State */
 .empty {
   text-align: center;
-  color: #888;
-  padding: 80px 20px;
-  font-size: 1.3rem;
+  color: #777;
+  padding: 100px 24px;
+  font-size: 1.4rem;
   animation: fadeInUp 1s ease both;
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.05);
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 /* Responsive */
 @media (max-width: 1024px) {
   .grid {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 32px;
+    gap: 36px;
   }
 }
 
 @media (max-width: 900px) {
   .title {
-    font-size: 2.8rem;
+    font-size: 3rem;
+  }
+
+  .subtitle {
+    font-size: 1.25rem;
+  }
+
+  .card {
+    padding: 28px;
+  }
+
+  .imageWrap {
+    height: 210px;
+  }
+
+  .cardTitle {
+    font-size: 1.7rem;
+  }
+
+  .desc {
+    font-size: 1.1rem;
+    -webkit-line-clamp: 4; /* Slightly more lines on smaller screens if needed */
+  }
+
+  .btn {
+    padding: 12px 28px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .filterBar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .searchWrapper,
+  .filterWrapper {
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .title {
+    font-size: 2.6rem;
   }
 
   .subtitle {
     font-size: 1.2rem;
+  }
+
+  .header {
+    margin-bottom: 60px;
   }
 
   .card {
@@ -215,34 +424,7 @@
   }
 
   .imageWrap {
-    height: 200px;
-  }
-
-  .cardTitle {
-    font-size: 1.6rem;
-  }
-
-  .desc {
-    font-size: 1rem;
-  }
-
-  .btn {
-    padding: 10px 24px;
-    font-size: 0.95rem;
-  }
-}
-
-@media (max-width: 600px) {
-  .title {
-    font-size: 2.4rem;
-  }
-
-  .subtitle {
-    font-size: 1.15rem;
-  }
-
-  .header {
-    margin-bottom: 50px;
+    height: 180px;
   }
 }
 
@@ -260,5 +442,5 @@
 
 @keyframes subtleMove {
   from { background-position: 0 0; }
-  to { background-position: 50px 50px; }
+  to { background-position: 60px 60px; }
 }

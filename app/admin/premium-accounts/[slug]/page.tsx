@@ -1,3 +1,4 @@
+// app/admin/premium-accounts/edit/[slug]/page.tsx (or your exact path)
 "use client";
 
 import { use, useState, useEffect } from "react";
@@ -50,7 +51,7 @@ export default function EditPremiumAccount({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // null = checking
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   const [accountId, setAccountId] = useState<string>("");
 
@@ -67,7 +68,10 @@ export default function EditPremiumAccount({
   const [price, setPrice] = useState<number | "">("");
   const [isAvailable, setIsAvailable] = useState(true);
 
-  // Auto-generate slug
+  // NEW: Account Type
+  const [type, setType] = useState<"Social" | "Game" | "">("");
+
+  // Auto-generate slug from title
   useEffect(() => {
     if (title) {
       const generated = title
@@ -81,7 +85,7 @@ export default function EditPremiumAccount({
     }
   }, [title]);
 
-  // Check auth + fetch account
+  // Check auth + fetch account data
   useEffect(() => {
     const token = getToken();
 
@@ -100,7 +104,10 @@ export default function EditPremiumAccount({
       try {
         const res = await apiFetch(`/premium-accounts/${slug}`);
 
-        if (!res.ok) throw new Error("Account not found");
+        if (!res.ok) {
+          const msg = await res.text();
+          throw new Error(msg || "Account not found");
+        }
 
         const data = await res.json();
 
@@ -113,6 +120,7 @@ export default function EditPremiumAccount({
         setDesc(data.desc || "");
         setPrice(data.price || 0);
         setIsAvailable(data.isAvailable !== false);
+        setType(data.type || ""); // ← Load type from API
       } catch (err: any) {
         setError(err.message || "Failed to load account");
         console.error(err);
@@ -153,10 +161,16 @@ export default function EditPremiumAccount({
     setGallery(gallery.filter((_, i) => i !== index));
   };
 
+  // Submit update
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!accountId) {
       alert("Account ID missing");
+      return;
+    }
+
+    if (!type) {
+      alert("Please select an Account Type");
       return;
     }
 
@@ -172,6 +186,7 @@ export default function EditPremiumAccount({
       slug: slugState,
       price: Number(price) || 0,
       isAvailable,
+      type, // ← Send updated type
     };
 
     try {
@@ -181,40 +196,43 @@ export default function EditPremiumAccount({
       });
 
       if (!res.ok) {
-        const err = await res.text();
-        throw new Error(err || "Update failed");
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || "Update failed");
       }
 
       alert("Account updated successfully!");
       router.push("/admin/premium-accounts");
     } catch (err: any) {
-      setError(err.message || "Failed to save");
+      setError(err.message || "Failed to save changes");
       alert(err.message || "Update failed");
     } finally {
       setSaving(false);
     }
   };
 
-  // Show neutral loading until we know auth status
+  // Loading / auth states
   if (isAuthenticated === null || loading) {
     return (
       <div className={styles.wrapper}>
         <div className="container">
-          <p className={styles.loading}>Loading...</p>
+          <p className={styles.loading}>Loading account...</p>
         </div>
       </div>
     );
   }
 
   if (isAuthenticated === false) {
-    return null; // redirecting
+    return null;
   }
 
-  if (error) {
+  if (error && loading === false) {
     return (
       <div className={styles.wrapper}>
         <div className="container">
           <p className={styles.error}>{error}</p>
+          <button onClick={() => router.back()} className={styles.backBtn}>
+            ← Go Back
+          </button>
         </div>
       </div>
     );
@@ -226,10 +244,31 @@ export default function EditPremiumAccount({
         <h1 className={styles.pageTitle}>Edit Premium Account</h1>
 
         <form onSubmit={handleSubmit} className={styles.form}>
+          {/* NEW: Account Type */}
+          <div className={styles.group}>
+            <label>Account Type *</label>
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value as "Social" | "Game")}
+              required
+              className={styles.select}
+            >
+              <option value="">Select Type</option>
+              <option value="Social">Social Account</option>
+              <option value="Game">Game Account</option>
+            </select>
+          </div>
+
           {/* Title */}
           <div className={styles.group}>
             <label>Title *</label>
-            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              placeholder="e.g. Valorant Immortal Account"
+            />
           </div>
 
           <div className={styles.group}>
@@ -245,7 +284,7 @@ export default function EditPremiumAccount({
                 type="text"
                 value={currentBadge}
                 onChange={(e) => setCurrentBadge(e.target.value)}
-                placeholder="e.g. 4K, Family Sharing"
+                placeholder="e.g. Ranked Ready, Skins"
                 onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addBadge())}
               />
               <button type="button" onClick={addBadge}>
@@ -273,7 +312,14 @@ export default function EditPremiumAccount({
             <input type="url" value={img} onChange={(e) => setImg(e.target.value)} required />
             {img && (
               <div className={styles.imagePreview}>
-                <Image src={img} alt="Preview" width={400} height={225} className={styles.previewImg} unoptimized />
+                <Image
+                  src={img}
+                  alt="Main preview"
+                  width={500}
+                  height={280}
+                  className={styles.previewImg}
+                  unoptimized
+                />
               </div>
             )}
           </div>
@@ -286,7 +332,7 @@ export default function EditPremiumAccount({
                 type="url"
                 value={currentGalleryUrl}
                 onChange={(e) => setCurrentGalleryUrl(e.target.value)}
-                placeholder="https://example.com/img.jpg"
+                placeholder="https://example.com/screenshot.jpg"
                 onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addGalleryImage())}
               />
               <button type="button" onClick={addGalleryImage}>
@@ -298,7 +344,14 @@ export default function EditPremiumAccount({
               <div className={styles.galleryPreview}>
                 {gallery.map((url, i) => (
                   <div key={i} className={styles.galleryItem}>
-                    <Image src={url} alt={`Gallery ${i + 1}`} width={200} height={120} className={styles.galleryThumb} unoptimized />
+                    <Image
+                      src={url}
+                      alt={`Gallery ${i + 1}`}
+                      width={250}
+                      height={150}
+                      className={styles.galleryThumb}
+                      unoptimized
+                    />
                     <button type="button" onClick={() => removeGalleryImage(i)} className={styles.removeBtn}>
                       ×
                     </button>
@@ -311,7 +364,7 @@ export default function EditPremiumAccount({
           {/* Description */}
           <div className={styles.group}>
             <label>Description *</label>
-            <textarea rows={6} value={desc} onChange={(e) => setDesc(e.target.value)} required />
+            <textarea rows={8} value={desc} onChange={(e) => setDesc(e.target.value)} required />
           </div>
 
           {/* Price & Status */}
@@ -328,7 +381,10 @@ export default function EditPremiumAccount({
 
             <div className={styles.group}>
               <label>Status</label>
-              <select value={isAvailable ? "available" : "sold"} onChange={(e) => setIsAvailable(e.target.value === "available")}>
+              <select
+                value={isAvailable ? "available" : "sold"}
+                onChange={(e) => setIsAvailable(e.target.value === "available")}
+              >
                 <option value="available">Available</option>
                 <option value="sold">Sold / Unavailable</option>
               </select>
@@ -336,7 +392,7 @@ export default function EditPremiumAccount({
           </div>
 
           <button type="submit" className={styles.submitBtn} disabled={saving}>
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? "Saving Changes..." : "Save Changes"}
           </button>
         </form>
       </div>

@@ -1,3 +1,4 @@
+// app/admin/premium-accounts/add/page.tsx (or wherever your add page is)
 "use client";
 
 import { useState, useEffect } from "react";
@@ -56,6 +57,9 @@ export default function AddPremiumAccount() {
   const [desc, setDesc] = useState("");
   const [price, setPrice] = useState<number | "">("");
   const [isAvailable, setIsAvailable] = useState(true);
+  
+  // NEW: Account Type
+  const [type, setType] = useState<"Social" | "Game" | "">("");
 
   // Auto-generate slug from title
   useEffect(() => {
@@ -111,8 +115,9 @@ export default function AddPremiumAccount() {
     setLoading(true);
     setError(null);
 
-    if (!title.trim() || !img.trim() || !desc.trim()) {
-      alert("Title, Main Image, and Description are required.");
+    // Validation including new type field
+    if (!title.trim() || !img.trim() || !desc.trim() || !type) {
+      alert("Title, Main Image, Description, and Account Type are required.");
       setLoading(false);
       return;
     }
@@ -126,6 +131,7 @@ export default function AddPremiumAccount() {
       slug,
       price: Number(price) || 0,
       isAvailable,
+      type, // ← NEW: Send type to backend
     };
 
     try {
@@ -135,8 +141,9 @@ export default function AddPremiumAccount() {
       });
 
       if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(errText || "Failed to create account");
+        const errData = await res.json().catch(() => ({}));
+        const message = errData.message || "Failed to create account";
+        throw new Error(message);
       }
 
       alert("Premium account created successfully!");
@@ -169,9 +176,24 @@ export default function AddPremiumAccount() {
           <h1 className={styles.title}>Add Premium Account</h1>
         </header>
 
-        {error && <p style={{ color: "red", margin: "1rem 0" }}>{error}</p>}
+        {error && <p style={{ color: "red", margin: "1rem 0", fontWeight: "600" }}>{error}</p>}
 
         <form onSubmit={handleSubmit} className={styles.form}>
+          {/* NEW: Account Type Selection */}
+          <div className={styles.formGroup}>
+            <label>Account Type *</label>
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value as "Social" | "Game")}
+              required
+              className={styles.select}
+            >
+              <option value="">Select Type</option>
+              <option value="Social">Social Account</option>
+              <option value="Game">Game Account</option>
+            </select>
+          </div>
+
           {/* Title & Slug */}
           <div className={styles.formGroup}>
             <label>Title *</label>
@@ -180,7 +202,7 @@ export default function AddPremiumAccount() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              placeholder="e.g. Netflix Ultra HD"
+              placeholder="e.g. Instagram 100K Followers"
             />
           </div>
 
@@ -197,7 +219,7 @@ export default function AddPremiumAccount() {
                 type="text"
                 value={currentBadge}
                 onChange={(e) => setCurrentBadge(e.target.value)}
-                placeholder="e.g. 4K, Ad-Free"
+                placeholder="e.g. Verified, Aged"
                 onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addBadge())}
               />
               <button type="button" onClick={addBadge}>
@@ -232,7 +254,7 @@ export default function AddPremiumAccount() {
               value={img}
               onChange={(e) => setImg(e.target.value)}
               required
-              placeholder="https://example.com/image.jpg"
+              placeholder="https://example.com/main.jpg"
             />
           </div>
 
@@ -275,11 +297,11 @@ export default function AddPremiumAccount() {
           <div className={styles.formGroup}>
             <label>Description *</label>
             <textarea
-              rows={5}
+              rows={6}
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
               required
-              placeholder="Full account details, warranty, etc."
+              placeholder="Include login details, warranty, features, etc."
             />
           </div>
 
@@ -292,13 +314,16 @@ export default function AddPremiumAccount() {
                 min="0"
                 value={price}
                 onChange={(e) => setPrice(e.target.value ? Number(e.target.value) : "")}
-                placeholder="0"
+                placeholder="0 for free/gift"
               />
             </div>
 
             <div className={styles.formGroup}>
               <label>Status</label>
-              <select value={isAvailable ? "available" : "sold"} onChange={(e) => setIsAvailable(e.target.value === "available")}>
+              <select
+                value={isAvailable ? "available" : "sold"}
+                onChange={(e) => setIsAvailable(e.target.value === "available")}
+              >
                 <option value="available">Available</option>
                 <option value="sold">Sold / Unavailable</option>
               </select>
