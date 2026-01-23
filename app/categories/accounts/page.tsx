@@ -93,7 +93,7 @@ export default async function AccountsPage() {
               <article
                 key={item.slug}
                 className={styles.card}
-                data-type={item.type.toLowerCase()}
+                data-type={item.type ? item.type.toLowerCase() : ""}
                 data-search={`${item.title} ${item.desc}`.toLowerCase()}
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
@@ -118,9 +118,12 @@ export default async function AccountsPage() {
                   {/* Type & Price Badges */}
                   <div className={styles.badgeRow}>
                     <span
-                      className={`${styles.badge} ${
-                        item.type === "Social" ? styles.socialBadge : styles.gameBadge
-                      }`}
+                      className={`${styles.badge} ${item.type === "Social"
+                          ? styles.socialBadge
+                          : item.type === "Game"
+                            ? styles.gameBadge
+                            : styles.defaultBadge   // ← add fallback class if you have one, or just ""
+                        }`}
                     >
                       {item.type}
                     </span>
@@ -163,9 +166,9 @@ export default async function AccountsPage() {
               const typeFilter = document.getElementById('type-filter');
               const grid = document.getElementById('accounts-grid');
               const cards = grid ? grid.querySelectorAll('.${styles.card.replace(
-                ".",
-                ""
-              )}') : [];
+            ".",
+            ""
+          )}') : [];
 
               const filterAccounts = () => {
                 const searchTerm = searchInput.value.toLowerCase().trim();
