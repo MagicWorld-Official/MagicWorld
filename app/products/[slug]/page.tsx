@@ -18,22 +18,22 @@ interface PageProps {
 async function getProduct(slug: string): Promise<Product | null> {
   try {
     const res = await fetch(
-      `${process.env.API_URL}/products/${slug}`,
-      {
-        next: { revalidate: 60 }, // ✅ ISR for production
-      }
+      `${process.env.NEXT_PUBLIC_API_URL}/products/${slug}`,
+      { next: { revalidate: 60 } }
     );
 
     if (!res.ok) return null;
 
     const data = await res.json();
 
-    // keep original intent, just unwrap backend response safely
-    if (data?.product) return data.product;
-    if (data && typeof data === "object") return data;
-
+    // Handle different possible response shapes
+    if (data?.product) return data.product;               // { product: {...} }
+    if (data && typeof data === 'object' && data.slug) return data; // direct object { name, slug, ... }
+    
+    console.error("Unexpected API response for slug:", slug, data);
     return null;
-  } catch {
+  } catch (err) {
+    console.error("Fetch error:", err);
     return null;
   }
 }
