@@ -28,7 +28,8 @@ export default function CategoryClient({ products }: Props) {
   // Apply filter
   const filteredProducts = safeProducts.filter((p) => {
     if (filter === "all") return true;
-    return p.type === filter;
+    const productType = p.type ? String(p.type).trim().toLowerCase() : '';
+    return productType === filter;
   });
 
   const visibleProducts = filteredProducts.slice(0, visibleCount);
@@ -113,7 +114,7 @@ export default function CategoryClient({ products }: Props) {
 
                 <div className={styles.info}>
                   <h3>{item.name}</h3>
-                  {item.type && (
+                  {item.type && typeof item.type === 'string' && (
                     <span className={styles.typeTag}>
                       {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
                     </span>
